@@ -3,3 +3,6 @@
 - [x] Import CSV without inventing recovery details; support editing and duplicate prevention.
 - [x] Verify 280-row CSV preview, local save/reload, import tests, and successful build.
 - [ ] Complete and verify account-backed import — blocked until the user signs in; no account is available.
+- [ ] Import Garmin wellness exports from the past year privately.
+- [ ] Add recovery trends and personalized fitness journey insights based on available measurements.
+- [ ] Verify Garmin parsing, insight calculations, and tracker presentation.
