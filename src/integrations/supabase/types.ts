@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      garmin_wellness: {
+        Row: {
+          date: string
+          id: string
+          metric: string
+          period: string
+          user_id: string
+          values: Json
+        }
+        Insert: {
+          date: string
+          id?: string
+          metric: string
+          period: string
+          user_id: string
+          values: Json
+        }
+        Update: {
+          date?: string
+          id?: string
+          metric?: string
+          period?: string
+          user_id?: string
+          values?: Json
+        }
+        Relationships: []
+      }
       recovery_activities: {
         Row: {
           avg_hr: number | null
