@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ActivityImportPanel } from "@/components/activity-import-panel";
 import { MUSCLES, recoveryFor, hasRecoveryDetails, type Entry, type Muscle } from "@/lib/activity-import";
 import { Pencil, Trash2 } from "lucide-react";
+import { FitnessJourney } from "@/components/fitness-journey";
+import type { Wellness } from "@/lib/garmin";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,6 +32,7 @@ function status(p: number) {
 
 function Index() {
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [wellness, setWellness] = useState<Wellness[]>([]);
   const [localEntries, setLocalEntries] = useState<Entry[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Entry | null>(null);
@@ -43,6 +46,13 @@ function Index() {
     const {data, error} = await supabase.from("recovery_activities").select("*").order("date", {ascending: false});
     if (error) throw error;
     setEntries(data.map(e => ({...e, muscles: e.muscles.filter((m): m is Muscle => MUSCLES.some(x => x === m))})));
+    const result = await supabase.from("garmin_wellness").select("*").order("date");
+    if (result.error) throw result.error;
+    setWellness(result.data.map(row => {
+      const values: Wellness["values"] = {};
+      if (row.values && typeof row.values === "object" && !Array.isArray(row.values)) Object.entries(row.values).forEach(([key,value]) => {values[key] = typeof value === "number" ? value : null;});
+      return {metric:row.metric,date:row.date,period:row.period,values};
+    }));
   }, []);
   useEffect(() => {
     try { const saved = JSON.parse(localStorage.getItem(KEY) || "[]"); if (Array.isArray(saved)) setLocalEntries(saved); } catch {}
@@ -53,6 +63,7 @@ function Index() {
   }, []);
   useEffect(() => {
     setEditing(null); setError("");
+    setWellness([]);
     if (userId) {setEntries([]); refresh().catch(e => setError(e.message));}
     else setEntries(localEntries);
   }, [userId, localEntries, refresh]);
@@ -94,6 +105,8 @@ function Index() {
         </div>
       </header>
 
+      <FitnessJourney entries={entries} wellness={wellness} />
+      <h2 className="mb-4 mt-8 text-xl font-semibold">Muscle recovery · estimated from your logs</h2>
       <section className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {scores.map(({ m, p }) => {
           const s = status(p);
@@ -135,6 +148,7 @@ function Index() {
                 <Button
                   type="button"
                   key={m}
+                  variant={form.muscles.includes(m) ? "default" : "outline"}
                   aria-pressed={form.muscles.includes(m)}
                   onClick={() => toggle(m)}
                   className={`rounded-full border px-3 py-1 text-sm transition ${form.muscles.includes(m) ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent"}`}
