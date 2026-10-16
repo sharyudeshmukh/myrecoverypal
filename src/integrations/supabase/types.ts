@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      recovery_activities: {
+        Row: {
+          avg_hr: number | null
+          calories: number | null
+          date: string
+          distance: number | null
+          duration: string | null
+          id: string
+          intensity: number | null
+          max_hr: number | null
+          muscles: string[]
+          sleep: number | null
+          soreness: number | null
+          source_data: Json | null
+          source_key: string | null
+          title: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          avg_hr?: number | null
+          calories?: number | null
+          date: string
+          distance?: number | null
+          duration?: string | null
+          id?: string
+          intensity?: number | null
+          max_hr?: number | null
+          muscles?: string[]
+          sleep?: number | null
+          soreness?: number | null
+          source_data?: Json | null
+          source_key?: string | null
+          title?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          avg_hr?: number | null
+          calories?: number | null
+          date?: string
+          distance?: number | null
+          duration?: string | null
+          id?: string
+          intensity?: number | null
+          max_hr?: number | null
+          muscles?: string[]
+          sleep?: number | null
+          soreness?: number | null
+          source_data?: Json | null
+          source_key?: string | null
+          title?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
