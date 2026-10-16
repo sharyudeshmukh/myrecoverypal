@@ -11,6 +11,7 @@ describe("Activity import", () => {
   });
   it("does not treat missing recovery details as measured fatigue", () => {
     const row = parseActivities(csv)[0];
+    if (!row) throw new Error("Expected a parsed activity");
     expect(recoveryFor("Quads", [{...row, id: "1", muscles: ["Quads"]}], new Date(row.date).getTime())).toBe(100);
   });
   it("rejects the wrong file format", () => {

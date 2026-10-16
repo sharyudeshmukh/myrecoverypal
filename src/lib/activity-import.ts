@@ -31,16 +31,18 @@ export function parseActivities(text: string) {
   if (!result.meta.fields?.includes("Activity Type") || !result.meta.fields.includes("Date")) throw new Error("Choose an activity CSV with Activity Type and Date columns.");
   const seen = new Set<string>();
   return result.data.map(row => {
-    if (!row["Activity Type"] || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(row.Date) || !Number.isFinite(new Date(row.Date.replace(" ", "T")).getTime())) throw new Error("An activity is missing a valid date or workout type.");
-    const source_key = JSON.stringify([row.Date, row["Activity Type"], row.Title]);
+    const date = row["Date"];
+    const type = row["Activity Type"];
+    if (!type || !date || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(date) || !Number.isFinite(new Date(date.replace(" ", "T")).getTime())) throw new Error("An activity is missing a valid date or workout type.");
+    const source_key = JSON.stringify([date, type, row["Title"]]);
     if (seen.has(source_key)) return null;
     seen.add(source_key);
     return {
-      source_key, date: row.Date.replace(" ", "T"), type: row["Activity Type"], title: row.Title,
+      source_key, date: date.replace(" ", "T"), type, title: row["Title"] ?? null,
       muscles: [] as Muscle[], intensity: null, sleep: null, soreness: null,
-      duration: row.Time === "--" ? null : row.Time,
+      duration: row["Time"] === "--" ? null : row["Time"] ?? null,
       avg_hr: numeric(row["Avg HR"]), max_hr: numeric(row["Max HR"]),
-      calories: numeric(row.Calories), distance: numeric(row.Distance), source_data: row,
+      calories: numeric(row["Calories"]), distance: numeric(row["Distance"]), source_data: row,
     };
   }).filter(row => row !== null);
 }
