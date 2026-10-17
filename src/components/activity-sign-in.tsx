@@ -30,7 +30,7 @@ export function ActivitySignIn() {
     finally { setBusy(false); }
   }
   return <div className="space-y-3">
-    <h3 className="font-semibold">Sign in to import your activities</h3>
+    <h3 className="font-semibold">Sign in to your Garmin history</h3>
     <Button variant="outline" className="w-full" disabled={busy} onClick={() => social("google")}>Continue with Google</Button>
     <Button className="lovable-auth-button w-full" disabled={busy} onClick={() => social("lovable")}>Continue with Lovable</Button>
     <form onSubmit={submit} className="space-y-3">
