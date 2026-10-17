@@ -1,4 +1,5 @@
 # Activity import
+- [x] Create owner-only Garmin daily/activity tables and token-protected ingestion endpoint; verify token rejection, counts, repeat upserts, owner reads, anonymous denial, and passing tests.
 - [x] Add private Cloud activity history and sign-in.
 - [x] Import CSV without inventing recovery details; support editing and duplicate prevention.
 - [x] Verify 280-row CSV preview, local save/reload, import tests, and successful build.

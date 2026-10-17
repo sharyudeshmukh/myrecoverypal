@@ -14,6 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
+      garmin_activities: {
+        Row: {
+          activity_id: number
+          aerobic_te: number | null
+          anaerobic_te: number | null
+          avg_hr: number | null
+          avg_pace_or_speed: number | null
+          calories: number | null
+          distance_meters: number | null
+          duration_seconds: number | null
+          elevation_gain: number | null
+          max_hr: number | null
+          name: string | null
+          raw: Json | null
+          start_time_local: string | null
+          training_load: number | null
+          type: string | null
+        }
+        Insert: {
+          activity_id: number
+          aerobic_te?: number | null
+          anaerobic_te?: number | null
+          avg_hr?: number | null
+          avg_pace_or_speed?: number | null
+          calories?: number | null
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          elevation_gain?: number | null
+          max_hr?: number | null
+          name?: string | null
+          raw?: Json | null
+          start_time_local?: string | null
+          training_load?: number | null
+          type?: string | null
+        }
+        Update: {
+          activity_id?: number
+          aerobic_te?: number | null
+          anaerobic_te?: number | null
+          avg_hr?: number | null
+          avg_pace_or_speed?: number | null
+          calories?: number | null
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          elevation_gain?: number | null
+          max_hr?: number | null
+          name?: string | null
+          raw?: Json | null
+          start_time_local?: string | null
+          training_load?: number | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      garmin_daily: {
+        Row: {
+          active_kcal: number | null
+          awake_seconds: number | null
+          body_battery_charged: number | null
+          body_battery_drained: number | null
+          body_battery_high: number | null
+          body_battery_low: number | null
+          body_battery_wake: number | null
+          date: string
+          deep_sleep_seconds: number | null
+          hrv_last_night_avg: number | null
+          hrv_status: string | null
+          hrv_weekly_avg: number | null
+          intensity_minutes: number | null
+          light_sleep_seconds: number | null
+          raw: Json | null
+          rem_sleep_seconds: number | null
+          resting_hr: number | null
+          sleep_score: number | null
+          sleep_seconds: number | null
+          steps: number | null
+          stress_avg: number | null
+          stress_max: number | null
+          training_readiness: number | null
+          training_readiness_level: string | null
+        }
+        Insert: {
+          active_kcal?: number | null
+          awake_seconds?: number | null
+          body_battery_charged?: number | null
+          body_battery_drained?: number | null
+          body_battery_high?: number | null
+          body_battery_low?: number | null
+          body_battery_wake?: number | null
+          date: string
+          deep_sleep_seconds?: number | null
+          hrv_last_night_avg?: number | null
+          hrv_status?: string | null
+          hrv_weekly_avg?: number | null
+          intensity_minutes?: number | null
+          light_sleep_seconds?: number | null
+          raw?: Json | null
+          rem_sleep_seconds?: number | null
+          resting_hr?: number | null
+          sleep_score?: number | null
+          sleep_seconds?: number | null
+          steps?: number | null
+          stress_avg?: number | null
+          stress_max?: number | null
+          training_readiness?: number | null
+          training_readiness_level?: string | null
+        }
+        Update: {
+          active_kcal?: number | null
+          awake_seconds?: number | null
+          body_battery_charged?: number | null
+          body_battery_drained?: number | null
+          body_battery_high?: number | null
+          body_battery_low?: number | null
+          body_battery_wake?: number | null
+          date?: string
+          deep_sleep_seconds?: number | null
+          hrv_last_night_avg?: number | null
+          hrv_status?: string | null
+          hrv_weekly_avg?: number | null
+          intensity_minutes?: number | null
+          light_sleep_seconds?: number | null
+          raw?: Json | null
+          rem_sleep_seconds?: number | null
+          resting_hr?: number | null
+          sleep_score?: number | null
+          sleep_seconds?: number | null
+          steps?: number | null
+          stress_avg?: number | null
+          stress_max?: number | null
+          training_readiness?: number | null
+          training_readiness_level?: string | null
+        }
+        Relationships: []
+      }
       garmin_wellness: {
         Row: {
           date: string
