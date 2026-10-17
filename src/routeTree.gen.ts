@@ -9,18 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedWorkoutLogRouteImport } from './routes/_authenticated/workout-log'
 import { Route as ApiPublicIngestGarminRouteImport } from './routes/api/public/ingest-garmin'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWorkoutLogRoute = AuthenticatedWorkoutLogRouteImport.update({
+  id: '/_authenticated/workout-log',
+  path: '/workout-log',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicIngestGarminRoute = ApiPublicIngestGarminRouteImport.update({
@@ -30,49 +30,53 @@ const ApiPublicIngestGarminRoute = ApiPublicIngestGarminRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/workout-log': typeof AuthenticatedWorkoutLogRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/workout-log': typeof AuthenticatedWorkoutLogRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/workout-log': typeof AuthenticatedWorkoutLogRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/reset-password' | '/api/public/ingest-garmin'
+  fullPaths: '/reset-password' | '/workout-log' | '/api/public/ingest-garmin'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/reset-password' | '/api/public/ingest-garmin'
-  id: '__root__' | '/' | '/reset-password' | '/api/public/ingest-garmin'
+  to: '/reset-password' | '/workout-log' | '/api/public/ingest-garmin'
+  id:
+    | '__root__'
+    | '/reset-password'
+    | '/_authenticated/workout-log'
+    | '/api/public/ingest-garmin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  AuthenticatedWorkoutLogRoute: typeof AuthenticatedWorkoutLogRoute
   ApiPublicIngestGarminRoute: typeof ApiPublicIngestGarminRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/workout-log': {
+      id: '/_authenticated/workout-log'
+      path: '/workout-log'
+      fullPath: '/workout-log'
+      preLoaderRoute: typeof AuthenticatedWorkoutLogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ingest-garmin': {
@@ -86,8 +90,8 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  AuthenticatedWorkoutLogRoute: AuthenticatedWorkoutLogRoute,
   ApiPublicIngestGarminRoute: ApiPublicIngestGarminRoute,
 }
 export const routeTree = rootRouteImport

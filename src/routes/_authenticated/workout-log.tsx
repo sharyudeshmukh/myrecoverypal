@@ -8,7 +8,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { FitnessJourney } from "@/components/fitness-journey";
 import type { Wellness } from "@/lib/garmin";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/workout-log")({
   head: () => ({
     meta: [
       { title: "Recovery Tracker — Know when to train" },
