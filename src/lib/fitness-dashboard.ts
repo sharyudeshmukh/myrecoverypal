@@ -1,6 +1,7 @@
 import type { Tables } from '@/integrations/supabase/types';
 export type Daily = Tables<'garmin_daily'>;
 export type Workout = Tables<'garmin_activities'>;
+export const STEP_GOAL = 8000;
 export const OVERNIGHT = 'No overnight data — wear your watch to bed';
 export const TYPES = ['strength_training', 'treadmill_running', 'indoor_cardio', 'running'] as const;
 export type WorkoutType = typeof TYPES[number] | 'other';

@@ -123,6 +123,7 @@ function RootComponent() {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       if (event === "SIGNED_OUT") queryClient.clear();
       void router.invalidate();
+      if (event === "SIGNED_IN" && (router.state.location.pathname === "/" || router.state.location.pathname === "/auth")) void router.navigate({ to: "/dashboard", search: { days: 30 } });
       if (event !== "SIGNED_OUT") void queryClient.invalidateQueries();
     });
     return () => subscription.unsubscribe();

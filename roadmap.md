@@ -1,11 +1,11 @@
 # Activity import
-- [ ] Build private Garmin dashboard, daily trends, workout summaries, and evidence-based insights without changing ingestion or schemas.
-- [ ] Test dashboard data rules and verify signed-in desktop/mobile views.
+- [x] Build private Garmin dashboard, daily trends, workout summaries, and evidence-based insights without changing ingestion or schemas.
+- [x] Test dashboard data rules and verify signed-in desktop/mobile views.
 - [x] Create owner-only Garmin daily/activity tables and token-protected ingestion endpoint; verify token rejection, counts, repeat upserts, owner reads, anonymous denial, and passing tests.
 - [x] Add private Cloud activity history and sign-in.
 - [x] Import CSV without inventing recovery details; support editing and duplicate prevention.
 - [x] Verify 280-row CSV preview, local save/reload, import tests, and successful build.
-- [ ] Complete and verify account-backed import — blocked until the user signs in; no account is available.
+- [ ] Verify legacy CSV account-backed import — requires the user’s selected source files; separate from this Garmin-table dashboard.
 - [x] Add private Garmin wellness imports with an unsaved preview of all uploaded exports.
 - [x] Add recovery outlook, training trends, VO₂ max, heart-rate baseline, and personalized fitness insights.
 - [x] Verify all nine export formats (280 distinct activities, 333 wellness rows), 11 tests, charts, and small-screen layout.

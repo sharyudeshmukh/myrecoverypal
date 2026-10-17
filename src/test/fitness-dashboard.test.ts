@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildDashboard, consistencyStreak, normalizeDay, suggestion, weeklyWorkouts, type Daily, type Workout } from '@/lib/fitness-dashboard';
+import { STEP_GOAL, buildDashboard, consistencyStreak, normalizeDay, suggestion, weeklyWorkouts, type Daily, type Workout } from '@/lib/fitness-dashboard';
 const day=(values:Partial<Daily>={}):Daily=>({date:'2026-10-17',sleep_score:null,sleep_seconds:null,deep_sleep_seconds:null,rem_sleep_seconds:null,light_sleep_seconds:null,awake_seconds:null,resting_hr:null,hrv_last_night_avg:null,hrv_weekly_avg:null,training_readiness:null,stress_avg:null,stress_max:null,body_battery_high:null,body_battery_low:null,body_battery_charged:null,body_battery_drained:null,body_battery_wake:null,steps:null,active_kcal:null,intensity_minutes:null,hrv_status:null,training_readiness_level:null,raw:null,...values});
 const workout=(values:Partial<Workout>={}):Workout=>({activity_id:1,name:null,type:'running',start_time_local:'2026-10-17T10:00:00',duration_seconds:1800,distance_meters:5000,avg_hr:140,max_hr:null,calories:null,aerobic_te:null,anaerobic_te:null,training_load:null,avg_pace_or_speed:null,elevation_gain:null,raw:null,...values});
 describe('Garmin dashboard rules',()=>{
+ it('sets the daily steps goal to 8,000',()=>{expect(STEP_GOAL).toBe(8000);});
  it('treats negative stress as missing, not zero',()=>{expect(normalizeDay(day({stress_avg:-1})).stress_avg).toBeNull();expect(normalizeDay(day({stress_avg:0})).stress_avg).toBe(0);});
  it('requires recorded sleep for reliable resting HR',()=>{expect(normalizeDay(day({resting_hr:62})).resting_hr).toBeNull();expect(normalizeDay(day({sleep_seconds:25200,resting_hr:62})).resting_hr).toBe(62);});
  it('recovers when high battery is below 40',()=>{expect(suggestion(day({body_battery_high:39,sleep_seconds:28800,body_battery_wake:80}))).toBe('Recover');expect(suggestion(day({body_battery_high:40}))).toBe('Steady');});
