@@ -15,6 +15,13 @@
       "when": 1792194070788,
       "tag": "0001_create_garmin_wellness",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792276265923,
+      "tag": "0002_create_private_garmin_ingestion",
+      "breakpoints": true
     }
   ]
 }

@@ -13,3 +13,4 @@
 - Parse activity CSVs in the browser with Papa Parse and retain original source values; missing recovery inputs remain nullable and excluded from recovery estimates.
 - Do not bundle personal uploaded activity data in public app assets; users select the file for an authenticated import.
 - Store Garmin wellness readings separately with their reported period; show evidence-based deterministic insights and never merge weekly summaries into a fabricated daily readiness score.
+- External Garmin ingestion uses a token-authenticated TanStack public server route with privileged writes; single-owner SELECT policies keep date/activity-ID primary keys private to the designated account.
