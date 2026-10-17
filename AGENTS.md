@@ -14,3 +14,6 @@
 - Do not bundle personal uploaded activity data in public app assets; users select the file for an authenticated import.
 - Store Garmin wellness readings separately with their reported period; show evidence-based deterministic insights and never merge weekly summaries into a fabricated daily readiness score.
 - External Garmin ingestion uses a token-authenticated TanStack public server route with privileged writes; single-owner SELECT policies keep date/activity-ID primary keys private to the designated account.
+
+- Keep dashboard reads in authenticated server functions with user-keyed Query caches; the protected route layout gates private pages and sign-out clears cached readings to prevent account leakage.
+- Compute daily dashboard rules and weekly summaries in the pure fitness-dashboard module so thresholds and missing-data behavior remain testable independently of charts.

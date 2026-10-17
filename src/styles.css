@@ -33,10 +33,13 @@
   --color-ready: var(--ready);
   --color-caution: var(--caution);
   --color-fatigued: var(--fatigued);
+  --color-chart-treadmill: var(--chart-treadmill);
+  --color-chart-cardio: var(--chart-cardio);
+  --color-chart-running: var(--chart-running);
 }
 
 :root {
-  --radius: 1rem;
+  --radius: 0.5rem;
   --background: oklch(0.17 0.012 160);
   --foreground: oklch(0.95 0.01 140);
   --card: oklch(0.22 0.015 160);
@@ -59,6 +62,9 @@
   --ready: oklch(0.88 0.2 128);
   --caution: oklch(0.82 0.15 80);
   --fatigued: oklch(0.68 0.19 30);
+  --chart-treadmill: oklch(0.73 0.13 230);
+  --chart-cardio: oklch(0.75 0.14 55);
+  --chart-running: oklch(0.76 0.14 175);
 }
 
 @layer base {
@@ -70,3 +76,9 @@
   }
   h1, h2, h3 { font-family: var(--font-display); }
 }
+
+.workout-strength_training { background: var(--primary); }
+.workout-treadmill_running { background: var(--chart-treadmill); }
+.workout-indoor_cardio { background: var(--chart-cardio); }
+.workout-running { background: var(--chart-running); }
+.workout-other { background: var(--muted-foreground); }
