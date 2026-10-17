@@ -36,7 +36,10 @@ export type GarminPayload = z.infer<typeof garminPayloadSchema>;
 export async function matchesIngestToken(provided: string | null, expected: string): Promise<boolean> {
   if (!provided) return false;
   const encode = new TextEncoder();
-  const [a, b] = await Promise.all([provided, expected].map(value => crypto.subtle.digest("SHA-256", encode.encode(value))));
+  const [a, b] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encode.encode(provided)),
+    crypto.subtle.digest("SHA-256", encode.encode(expected)),
+  ]);
   const left = new Uint8Array(a);
   const right = new Uint8Array(b);
   let difference = 0;
