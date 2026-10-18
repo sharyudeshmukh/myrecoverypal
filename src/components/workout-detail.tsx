@@ -12,7 +12,7 @@ const dateLabel = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateStr
 const fmt = (v: number | null | undefined, unit = '', digits = 0) => (v === null || v === undefined || !Number.isFinite(v) ? '—' : `${v.toLocaleString(undefined, { maximumFractionDigits: digits })}${unit}`);
 const pace = (min: number | null) => (min === null ? '—' : `${Math.floor(min)}:${String(Math.round((min % 1) * 60)).padStart(2, '0')} /km`);
 
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Stat({ label, value, sub }: { label: string; value: string; sub?: string | undefined }) {
   return (
     <div className="rounded-lg border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -39,9 +39,9 @@ export function WorkoutDetail({ activity, previous, sets, daily, goals, onSetsCh
   const hasZones = zones.some((z) => z.minutes > 0);
   const laps = splits(activity as Workout);
   const raw = activity.raw as Record<string, unknown> | null;
-  const movingSeconds = typeof raw?.movingDuration === 'number' ? (raw.movingDuration as number) : null;
-  const totalSets = typeof raw?.activeSets === 'number' ? (raw.activeSets as number) : null;
-  const totalReps = typeof raw?.totalReps === 'number' ? (raw.totalReps as number) : null;
+  const movingSeconds = typeof raw?.['movingDuration'] === 'number' ? (raw['movingDuration'] as number) : null;
+  const totalSets = typeof raw?.['activeSets'] === 'number' ? (raw['activeSets'] as number) : null;
+  const totalReps = typeof raw?.['totalReps'] === 'number' ? (raw['totalReps'] as number) : null;
   const note = goalNote(activity as Workout, daily, maxHr);
 
   const [exercise, setExercise] = useState('');
