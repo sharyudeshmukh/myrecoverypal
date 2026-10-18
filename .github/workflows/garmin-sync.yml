@@ -22,11 +22,25 @@ jobs:
 
       - run: pip install "garminconnect>=0.3" requests
 
+      - name: Check secrets
+        run: |
+          missing=0
+          [ -z "$GARMIN_TOKENS" ] && echo "::error::GARMIN_TOKENS secret is missing or empty in THIS repo" && missing=1
+          [ -z "$INGEST_URL" ]    && echo "::error::INGEST_URL secret is missing or empty in THIS repo" && missing=1
+          [ -z "$INGEST_TOKEN" ]  && echo "::error::INGEST_TOKEN secret is missing or empty in THIS repo" && missing=1
+          exit $missing
+        env:
+          GARMIN_TOKENS: ${{ secrets.GARMIN_TOKENS }}
+          INGEST_URL: ${{ secrets.INGEST_URL }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+
       - name: Restore Garmin tokens
         run: |
           mkdir -p ~/.garminconnect
           printf '%s' "$GARMIN_TOKENS" > ~/.garminconnect/garmin_tokens.json
           chmod 600 ~/.garminconnect/garmin_tokens.json
+          python -c "import json,os; json.load(open(os.path.expanduser('~/.garminconnect/garmin_tokens.json')))" \
+            || { echo "::error::GARMIN_TOKENS is not valid JSON - re-copy it with: pbcopy < ~/.garminconnect/garmin_tokens.json"; exit 1; }
         env:
           GARMIN_TOKENS: ${{ secrets.GARMIN_TOKENS }}
 
