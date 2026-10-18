@@ -39,6 +39,7 @@
 }
 
 :root {
+  --nav-shadow: 0 -6px 24px oklch(0 0 0 / 18%);
   --radius: 0.5rem;
   --background: oklch(0.17 0.012 160);
   --foreground: oklch(0.95 0.01 140);
@@ -82,3 +83,6 @@
 .workout-indoor_cardio { background: var(--chart-cardio); }
 .workout-running { background: var(--chart-running); }
 .workout-other { background: var(--muted-foreground); }
+
+.app-bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); box-shadow: var(--nav-shadow); }
+body:has(.app-bottom-nav) { padding-bottom: env(safe-area-inset-bottom, 0px); }

@@ -6,33 +6,27 @@ const items = [
   { to: '/workouts', label: 'Workouts', icon: Dumbbell },
   { to: '/trends', label: 'Trends', icon: LineChart },
   { to: '/goals', label: 'Goals', icon: Target },
+  { to: '/workout-log', label: 'Recovery', icon: HeartPulse },
 ] as const;
 
 export function AppNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
   return (
-    <nav aria-label="Main navigation" className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-stretch justify-between px-2">
+    <nav aria-label="Main navigation" className="app-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 backdrop-blur">
+      <div className="mx-auto grid min-h-16 max-w-3xl grid-cols-5 items-stretch gap-1 px-2">
         {items.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
             aria-current={isActive(to) ? 'page' : undefined}
-            className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${isActive(to) ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`relative my-1 flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-lg text-xs font-semibold transition motion-safe:active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${isActive(to) ? 'bg-primary/15 text-primary' : 'text-foreground/70 hover:bg-accent hover:text-foreground'}`}
           >
-            <Icon className="size-5" />
+            {isActive(to) && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />}
+            <Icon className="size-6" />
             {label}
           </Link>
         ))}
-        <Link
-          to="/workout-log"
-          aria-current={isActive('/workout-log') ? 'page' : undefined}
-          className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${isActive('/workout-log') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-        >
-          <HeartPulse className="size-5" />
-          Recovery
-        </Link>
       </div>
     </nav>
   );

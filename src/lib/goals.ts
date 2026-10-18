@@ -1,6 +1,7 @@
 import type { Tables } from '@/integrations/supabase/types';
 import type { Daily, Workout } from '@/lib/fitness-dashboard';
 import { shiftDate, weekStart, workoutType, average } from '@/lib/fitness-dashboard';
+import { computeGarminRecovery } from '@/lib/garmin-recovery';
 
 export type Goals = Tables<'user_goals'>;
 export type WeightEntry = Tables<'weight_log'>;
@@ -224,8 +225,8 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
   // Rule 3: 2+ days since strength and battery >= 40 — unless cardio is behind target
   if (!cardioBehind && f.daysSinceStrength !== null && f.daysSinceStrength >= 2 && (battery == null || battery >= 40)) {
     if (strengthBehind) {
-      const muscles = leastRecentlyTrained(strengthSets, activities, today);
-      why.push(`It's been ${f.daysSinceStrength} days since your last strength session — muscles are recovered.`);
+      const muscles = computeGarminRecovery(activities, daily, new Date(`${today}T12:00:00`).getTime()).freshest;
+      why.push(`It's been ${f.daysSinceStrength} days since your last strength session. Freshest estimated groups: ${muscles.join(', ')}.`);
       why.push(batteryText);
       why.push(`Strength is at ${f.strengthThisWeek} of ${strengthTarget} sessions this week.`);
       return { type: 'strength', title: 'Strength: full-body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles.length ? muscles : undefined };
@@ -243,7 +244,7 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
 
   // Rule 5: alternate strength / cardio
   if (strengthBehind) {
-    const muscles = leastRecentlyTrained(strengthSets, activities, today);
+    const muscles = computeGarminRecovery(activities, daily, new Date(`${today}T12:00:00`).getTime()).freshest;
     why.push(`Strength is at ${f.strengthThisWeek} of ${strengthTarget} sessions this week.`);
     why.push(batteryText);
     why.push('Alternating with cardio keeps muscle stimulus high while burning calories.');
