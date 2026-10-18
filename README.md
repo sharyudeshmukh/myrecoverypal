@@ -1,14 +1,31 @@
-# Welcome to your Lovable project
+# NextRep
 
-This project was built with [Lovable](https://lovable.dev).
+Lose weight, build muscle — one clear next rep at a time.
 
-## Build with Lovable
+A goal-driven fitness app that turns a year of Garmin data into plain-English guidance: what to train tomorrow, how recovered each muscle is, and what your trends actually mean.
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+<img src="docs/hero.gif" alt="NextRep: Today screen with next-workout recommendation, automatic muscle Recovery map, and a workout detail page with heart-rate zones and strength log" width="720" />
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## Highlights
+
+- **Today** — a rule-based "next workout" engine (strength, cardio, or recovery day) with reasons, HR zones, and a low-energy alternative, plus today's metric tiles with 7-day sparklines.
+- **Workouts** — every Garmin session with heart-rate zones, splits, comparison to the previous session, and a strength log with progressive-overload callouts.
+- **Recovery** — fully automatic muscle-recovery estimates computed from Garmin exercise data and cardio load, with exponential decay adjusted by Body Battery.
+- **Trends** — Body Battery, sleep, stress, steps, and weekly training volume over 30 or 90 days.
+- **Goals** — weight trend toward your target, goal settings, and an insights feed that compares your last 7 days to the previous 7.
+
+## Try it
+
+- Live demo (sample data, no sign-up): `/demo`
+- Sign in to sync your own Garmin data through a private ingestion endpoint.
+
+## Built with
+
+- TanStack Start
+- TypeScript
+- React
+- Tailwind CSS
+- Lovable Cloud
 
 ## Development
 
@@ -20,10 +37,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
