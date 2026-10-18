@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Sparkline } from '@/components/sparkline';
 import { OVERNIGHT, average, shiftDate, type Daily, type Workout } from '@/lib/fitness-dashboard';
-import { DEFAULT_GOALS, goalInsights, nextWorkout, rawStats, trainingFacts, type Goals, type StrengthSet } from '@/lib/goals';
+import { DEFAULT_GOALS, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet } from '@/lib/goals';
 import type { ReactNode } from 'react';
 
 const dateLabel = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -31,11 +31,9 @@ export function TodayPage({ daily, activities, goals, strengthSets, refresh, bus
   const current = sorted.find((d) => d.date === today);
   const week7 = sorted.filter((d) => d.date >= shiftDate(today, -6));
   const next = nextWorkout(daily, activities, goals, strengthSets, today);
-  const facts = trainingFacts(daily, activities, today);
   const insights = goalInsights(daily, activities, [], strengthSets, goals, today);
   const stepsGoal = goals?.steps_goal ?? DEFAULT_GOALS.steps_goal;
   const units = goals?.units ?? 'kg';
-  const maxHr = facts ? null : null; // unused placeholder
 
   const stats = current ? rawStats(current) : {};
   const batteryNow = (() => {

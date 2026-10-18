@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
-import { ArrowLeft, Clock, Flame, Heart, MapPin, Plus, Trash2, Gauge } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, MapPin, Plus, Trash2, Gauge } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { LABELS, workoutType, type Daily, type Workout } from '@/lib/fitness-dashboard';
