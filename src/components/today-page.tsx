@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDemoMode } from '@/lib/demo-context';
 import { Sparkline } from '@/components/sparkline';
 import { OVERNIGHT, average, shiftDate, type Daily, type Workout } from '@/lib/fitness-dashboard';
-import { DEFAULT_GOALS, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet, type WeightEntry } from '@/lib/goals';
+import { DEFAULT_GOALS, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet, type WeightEntry, type NextWorkout } from '@/lib/goals';
 import { useEffect, useState, type ReactNode } from 'react';
 import { computeGarminRecovery } from '@/lib/garmin-recovery';
 
@@ -27,7 +27,7 @@ function Tile({ icon: Icon, label, value, detail, avgLabel, spark, children }: {
   );
 }
 
-export function TodayPage({ daily, activities, goals, strengthSets, weightLog = [], refresh, busy }: { daily: Daily[]; activities: Workout[]; goals: Goals | null; strengthSets: StrengthSet[]; weightLog?: WeightEntry[]; refresh: () => void; busy: boolean }) {
+export function TodayPage({ daily, activities, goals, strengthSets, weightLog = [], refresh, busy, recommendation }: { daily: Daily[]; activities: Workout[]; goals: Goals | null; strengthSets: StrengthSet[]; weightLog?: WeightEntry[]; refresh: () => void; busy: boolean; recommendation?: NextWorkout | null }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
   const demo = useDemoMode();
@@ -36,7 +36,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
   const sorted = daily.filter((d) => d.date <= today).sort((a, b) => b.date.localeCompare(a.date));
   const current = sorted.find((d) => d.date === today);
   const week7 = sorted.filter((d) => d.date >= shiftDate(today, -6));
-  const next = nextWorkout(daily, activities, goals, strengthSets, today, now);
+  const next = recommendation ?? nextWorkout(daily, activities, goals, strengthSets, today, now);
   const insights = goalInsights(daily, activities, weightLog, strengthSets, goals, today);
   const stepsGoal = goals?.steps_goal ?? DEFAULT_GOALS.steps_goal;
   const units = goals?.units ?? 'kg';
@@ -84,7 +84,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
       </header>
       <main className="mx-auto max-w-5xl space-y-10 px-5 py-8">
         <section data-tour="next-workout">
-          <p className="mb-2 text-xs font-medium uppercase text-primary">Tomorrow / next workout</p>
+          <p className="mb-2 text-xs font-medium uppercase text-primary">Today / next workout{recommendation ? ' · frozen recommendation' : ''}</p>
           <div className="rounded-xl border border-primary/40 bg-card p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
@@ -96,7 +96,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
             </div>
             {next.muscleGroups?.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
-                {recovery.freshest.map((m) => (
+                {next.muscleGroups.map((m) => (
                   <span key={m} className="rounded-full border border-primary/40 px-3 py-1 text-xs capitalize text-primary">{m}</span>
                 ))}
               </div>

@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
+import { captureRecommendations } from './evaluation.server';
 export const fetchFitnessDashboard = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const [daily, activities, goals, weightLog, strengthSets, recoveryActivities] = await Promise.all([
     context.supabase.from('garmin_daily').select('*').order('date', { ascending: false }).limit(100),
@@ -13,7 +14,11 @@ export const fetchFitnessDashboard = createServerFn({ method: 'GET' }).middlewar
   if (activities.error) throw new Error('Workouts could not be loaded. Please try again.');
   if (recoveryActivities.error) throw new Error('Recovery workouts could not be loaded. Please try again.');
   const rawById = new Map(recoveryActivities.data.map(a => [a.activity_id, a.raw]));
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const today = new Date().toISOString().slice(0,10);
+  const evaluation = await captureRecommendations(context.supabase, supabaseAdmin, context.userId, today, false);
   return {
+    recommendation: evaluation.logs.find(r => r.for_date === today && r.source === 'live')?.recommendation ?? null,
     daily: daily.data.map((d) => ({ ...d, raw: d.raw })),
     activities: activities.data.map((a) => ({ ...a, raw: rawById.get(a.activity_id) ?? null })),
     goals: goals.data ?? null,

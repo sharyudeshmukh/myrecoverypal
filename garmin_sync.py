@@ -138,6 +138,13 @@ def push(payload):
                       headers={"x-ingest-token": token})
     r.raise_for_status()
     print(f"  -> pushed: {r.text[:200]}")
+    # Separate post-sync capture keeps the existing ingestion endpoint unchanged.
+    evaluation_url = url.rsplit("/", 1)[0] + "/evaluate-garmin"
+    evaluation = requests.post(evaluation_url,
+        json={"for_date": dt.date.today().isoformat()}, timeout=120,
+        headers={"x-ingest-token": token})
+    evaluation.raise_for_status()
+    print("  -> recommendation frozen; historical replay kept separate")
 
 
 def main():
