@@ -140,6 +140,17 @@ def push(payload):
     print(f"  -> pushed: {r.text[:200]}")
 
 
+def capture_evaluation():
+    url, token = os.environ["INGEST_URL"], os.environ["INGEST_TOKEN"]
+    # Capture after the entire sync, not before later backfill chunks arrive.
+    evaluation_url = url.rsplit("/", 1)[0] + "/evaluate-garmin"
+    evaluation = requests.post(evaluation_url,
+        json={"for_date": dt.date.today().isoformat()}, timeout=120,
+        headers={"x-ingest-token": token})
+    evaluation.raise_for_status()
+    print("  -> recommendation frozen; historical replay kept separate")
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--login", action="store_true", help="one-time interactive login")
@@ -169,6 +180,7 @@ def main():
             time.sleep(0.5)  # be gentle with Garmin
         push({"days": days, "activities": collect_activities(g, day, chunk_end)})
         day = chunk_end + dt.timedelta(days=1)
+    capture_evaluation()
 
 
 if __name__ == "__main__":

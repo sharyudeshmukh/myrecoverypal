@@ -1,5 +1,7 @@
 import { shiftDate, type Daily, type Workout } from './fitness-dashboard';
 import type { Goals, StrengthSet, WeightEntry } from './goals';
+import { generateDemoEvaluation } from './demo-evaluation';
+import type { RecommendationLog } from './evaluation';
 
 export const DEMO_USER_ID = 'demo-user';
 const SEED = 20261018;
@@ -41,6 +43,7 @@ export type DemoData = {
   goals: Goals;
   weightLog: WeightEntry[];
   strengthSets: StrengthSet[];
+  recommendationLogs: RecommendationLog[];
 };
 
 export function generateDemoData(today: string): DemoData {
@@ -287,5 +290,6 @@ export function generateDemoData(today: string): DemoData {
     updated_at: `${today}T07:00:00Z`,
   };
 
-  return { daily, activities, weightLog, goals, strengthSets };
+  const recommendationLogs = generateDemoEvaluation(daily, activities, goals, strengthSets, today);
+  return { daily, activities, weightLog, goals, strengthSets, recommendationLogs };
 }

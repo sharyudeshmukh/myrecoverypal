@@ -1,4 +1,9 @@
 # Goal-driven fitness app (lose weight + build muscle)
+- [x] Add immutable server recommendation logs and separate post-sync capture without editing the ingest route.
+- [x] Add prior-only replay, automatic adherence and missing-aware outcomes.
+- [x] Build Live/Replay evaluation with bootstrap intervals, rule and goal summaries.
+- [x] Seed isolated demo evaluation and test rules plus live/demo flows.
+- [ ] Activate unattended capture on the published app: requires publishing the new endpoint and running the updated Garmin sync script.
 - [x] Rename all app branding and metadata to NextRep.
 - [x] Make five bottom tabs prominent and accessible.
 - [x] Replace Recovery with automatic Garmin fatigue and feed Today suggestions.

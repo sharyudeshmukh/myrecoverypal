@@ -176,6 +176,54 @@ export type Database = {
         }
         Relationships: []
       }
+      recommendation_log: {
+        Row: {
+          duration_min: number
+          for_date: string
+          generated_at: string
+          hr_high: number | null
+          hr_low: number | null
+          id: string
+          inputs: Json
+          rec_type: string
+          recommendation: Json
+          rule_id: string
+          source: string
+          target_muscles: string[]
+          user_id: string
+        }
+        Insert: {
+          duration_min: number
+          for_date: string
+          generated_at?: string
+          hr_high?: number | null
+          hr_low?: number | null
+          id?: string
+          inputs: Json
+          rec_type: string
+          recommendation: Json
+          rule_id: string
+          source: string
+          target_muscles?: string[]
+          user_id: string
+        }
+        Update: {
+          duration_min?: number
+          for_date?: string
+          generated_at?: string
+          hr_high?: number | null
+          hr_low?: number | null
+          id?: string
+          inputs?: Json
+          rec_type?: string
+          recommendation?: Json
+          rule_id?: string
+          source?: string
+          target_muscles?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       recovery_activities: {
         Row: {
           avg_hr: number | null

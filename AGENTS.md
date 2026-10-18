@@ -24,3 +24,7 @@
 - Dashboard reads include raw payloads only for recent recovery activities and poll the user-keyed cache every minute so incoming Garmin data appears automatically without fetching historical raw payloads.
 - Demo mode is a deterministic client-side fixture behind a data-provider context that swaps in the same shapes the real queries return, so shared components render both sources through one code path; it must never read or write application tables or call the ingest route, and every write action surfaces a sign-in notice instead of persisting.
 
+
+- Recommendation snapshots are immutable server-only inserts keyed by owner/date; Today renders stored advice, while adherence/outcomes remain derived to reflect late syncs.
+- Evaluation math and prior-only replay live in the pure evaluation module with deterministic bootstrap tests; demo evaluation fixtures never call real queries.
+- Garmin sync calls the separate token-verified evaluate-garmin endpoint after successful ingestion; the ingest endpoint stays unchanged. Run the updated sync script and publish new endpoint changes to activate unattended capture.

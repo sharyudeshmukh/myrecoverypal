@@ -36,6 +36,27 @@
       "when": 1792283155015,
       "tag": "0004_goal_settings_strength_sets",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792301509598,
+      "tag": "0005_recommendation_evaluation",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792301693932,
+      "tag": "0006_server_only_recommendation_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792301864122,
+      "tag": "0007_restrict_recommendation_table_grants",
+      "breakpoints": true
     }
   ]
 }
