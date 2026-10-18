@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/integrations/supabase/types';
 import type { RecommendationLog } from './evaluation';
-import { freezeRecommendation, replayHistory } from './evaluation';
+import { freezeRecommendation } from './evaluation';
 
 export async function readEvaluationData(client: SupabaseClient<Database>, userId: string) {
   const [daily, activities, goals, sets] = await Promise.all([
@@ -22,9 +22,8 @@ export async function captureRecommendations(reader: SupabaseClient<Database>, w
   const existing = await reader.from('recommendation_log').select('for_date').eq('user_id',userId).limit(1000);
   if (existing.error) throw new Error('Frozen recommendation dates could not be loaded.');
   const dates = new Set(existing.data.map(r=>r.for_date));
-  const pending = replay ? replayHistory(data.daily.filter(d=>!dates.has(d.date)), data.activities, data.goals, data.sets, userId, today) : [];
-  // Pass all prior daily records for replay inputs, not only missing log dates.
-  const snapshots = pending.map(r=>freezeRecommendation(data.daily,data.activities,data.goals,data.sets,r.for_date,userId,'replay'));
+  const missing = replay ? data.daily.filter(d=>d.date < today && !dates.has(d.date)) : [];
+  const snapshots = missing.map(r=>freezeRecommendation(data.daily,data.activities,data.goals,data.sets,r.date,userId,'replay'));
   if (!dates.has(today)) snapshots.push(freezeRecommendation(data.daily, data.activities, data.goals, data.sets, today, userId, 'live'));
   // INSERT ... ON CONFLICT DO NOTHING is atomic, including concurrent sync/page loads.
   for (let i = 0; i < snapshots.length; i += 10) {
