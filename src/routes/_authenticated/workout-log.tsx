@@ -32,6 +32,7 @@ function status(p: number) {
 
 function Index() {
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [strengthEntries, setStrengthEntries] = useState<Entry[]>([]);
   const [wellness, setWellness] = useState<Wellness[]>([]);
   const [localEntries, setLocalEntries] = useState<Entry[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -53,6 +54,24 @@ function Index() {
       if (row.values && typeof row.values === "object" && !Array.isArray(row.values)) Object.entries(row.values).forEach(([key,value]) => {values[key] = typeof value === "number" ? value : null;});
       return {metric:row.metric,date:row.date,period:row.period,values};
     }));
+    // Strength sets logged on Garmin strength workouts feed the muscle-recovery cards.
+    const [setRows, actRows] = await Promise.all([
+      supabase.from("strength_sets").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("garmin_activities").select("activity_id,start_time_local,type"),
+    ]);
+    if (setRows.error) throw setRows.error;
+    if (actRows.error) throw actRows.error;
+    const dates = new Map(actRows.data.map(a => [a.activity_id, a.start_time_local ? a.start_time_local.replace(" ", "T") : new Date().toISOString()]));
+    const byExercise = new Map<string, Entry>();
+    for (const s of setRows.data) {
+      const muscle = (s.muscle_group.charAt(0).toUpperCase() + s.muscle_group.slice(1)) as Muscle;
+      if (!MUSCLES.includes(muscle)) continue;
+      const key = `${s.activity_id}:${s.exercise}`;
+      const entry = byExercise.get(key);
+      if (entry) { if (!entry.muscles.includes(muscle)) entry.muscles.push(muscle); }
+      else byExercise.set(key, { id: `set-${key}`, date: dates.get(s.activity_id) ?? new Date().toISOString(), type: "Strength", title: s.exercise, muscles: [muscle], intensity: null, sleep: null, soreness: null, source_key: null });
+    }
+    setStrengthEntries([...byExercise.values()]);
   }, []);
   useEffect(() => {
     try { const saved = JSON.parse(localStorage.getItem(KEY) || "[]"); if (Array.isArray(saved)) setLocalEntries(saved); } catch {}
@@ -69,10 +88,11 @@ function Index() {
   }, [userId, localEntries, refresh]);
   useEffect(() => { if (loaded) localStorage.setItem(KEY, JSON.stringify(localEntries)); }, [localEntries, loaded]);
 
-  const scores = useMemo(() => MUSCLES.map((m) => ({ m, p: recoveryFor(m, entries, now) })), [entries, now]);
+  const allEntries = useMemo(() => [...entries, ...strengthEntries], [entries, strengthEntries]);
+  const scores = useMemo(() => MUSCLES.map((m) => ({ m, p: recoveryFor(m, allEntries, now) })), [allEntries, now]);
   const overall = Math.round(scores.reduce((a, s) => a + s.p, 0) / scores.length);
   const os = status(overall);
-  const measured = entries.some(hasRecoveryDetails);
+  const measured = allEntries.some(hasRecoveryDetails);
 
   const toggle = (m: Muscle) =>
     setForm((f) => ({ ...f, muscles: f.muscles.includes(m) ? f.muscles.filter((x) => x !== m) : [...f.muscles, m] }));
@@ -110,17 +130,18 @@ function Index() {
       <section className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {scores.map(({ m, p }) => {
           const s = status(p);
-          const tracked = entries.some(e => hasRecoveryDetails(e) && e.muscles.includes(m));
+          const hasDetails = allEntries.some(e => hasRecoveryDetails(e) && e.muscles.includes(m));
+          const trained = allEntries.some(e => e.muscles.includes(m));
           return (
             <div key={m} className="rounded-xl border bg-card p-4">
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-medium">{m}</span>
-                <span className={`text-xs ${s.text}`}>{tracked ? s.label : "No data"}</span>
+                <span className={`text-xs ${s.text}`}>{hasDetails ? s.label : trained ? "Details needed" : "No data"}</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div className={`h-full ${s.cls} transition-all`} style={{ width: `${tracked ? p : 0}%` }} />
+                <div className={`h-full ${s.cls} transition-all`} style={{ width: `${hasDetails ? p : 0}%` }} />
               </div>
-              <p className="mt-2 text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>{tracked ? `${p}%` : "—"}</p>
+              <p className="mt-2 text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>{hasDetails ? `${p}%` : "—"}</p>
             </div>
           );
         })}

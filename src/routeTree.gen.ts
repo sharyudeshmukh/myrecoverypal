@@ -14,7 +14,12 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
+import { Route as AuthenticatedTodayRouteImport } from './routes/_authenticated/today'
+import { Route as AuthenticatedTrendsRouteImport } from './routes/_authenticated/trends'
 import { Route as AuthenticatedWorkoutLogRouteImport } from './routes/_authenticated/workout-log'
+import { Route as AuthenticatedWorkoutsIndexRouteImport } from './routes/_authenticated/workouts.index'
+import { Route as AuthenticatedWorkoutsIdRouteImport } from './routes/_authenticated/workouts.$id'
 import { Route as ApiPublicIngestGarminRouteImport } from './routes/api/public/ingest-garmin'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,9 +46,35 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTodayRoute = AuthenticatedTodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTrendsRoute = AuthenticatedTrendsRouteImport.update({
+  id: '/trends',
+  path: '/trends',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWorkoutLogRoute = AuthenticatedWorkoutLogRouteImport.update({
   id: '/workout-log',
   path: '/workout-log',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWorkoutsIndexRoute =
+  AuthenticatedWorkoutsIndexRouteImport.update({
+    id: '/workouts/',
+    path: '/workouts/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWorkoutsIdRoute = AuthenticatedWorkoutsIdRouteImport.update({
+  id: '/workouts/$id',
+  path: '/workouts/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiPublicIngestGarminRoute = ApiPublicIngestGarminRouteImport.update({
@@ -57,16 +88,26 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/goals': typeof AuthenticatedGoalsRoute
+  '/today': typeof AuthenticatedTodayRoute
+  '/trends': typeof AuthenticatedTrendsRoute
   '/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/workouts/': typeof AuthenticatedWorkoutsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/goals': typeof AuthenticatedGoalsRoute
+  '/today': typeof AuthenticatedTodayRoute
+  '/trends': typeof AuthenticatedTrendsRoute
   '/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/workouts': typeof AuthenticatedWorkoutsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -75,8 +116,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/goals': typeof AuthenticatedGoalsRoute
+  '/_authenticated/today': typeof AuthenticatedTodayRoute
+  '/_authenticated/trends': typeof AuthenticatedTrendsRoute
   '/_authenticated/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/_authenticated/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/_authenticated/workouts/': typeof AuthenticatedWorkoutsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -85,16 +131,26 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/dashboard'
+    | '/goals'
+    | '/today'
+    | '/trends'
     | '/workout-log'
+    | '/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/workouts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/reset-password'
     | '/dashboard'
+    | '/goals'
+    | '/today'
+    | '/trends'
     | '/workout-log'
+    | '/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/workouts'
   id:
     | '__root__'
     | '/'
@@ -102,8 +158,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/dashboard'
+    | '/_authenticated/goals'
+    | '/_authenticated/today'
+    | '/_authenticated/trends'
     | '/_authenticated/workout-log'
+    | '/_authenticated/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/_authenticated/workouts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -151,11 +212,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/goals': {
+      id: '/_authenticated/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof AuthenticatedGoalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/today': {
+      id: '/_authenticated/today'
+      path: '/today'
+      fullPath: '/today'
+      preLoaderRoute: typeof AuthenticatedTodayRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/trends': {
+      id: '/_authenticated/trends'
+      path: '/trends'
+      fullPath: '/trends'
+      preLoaderRoute: typeof AuthenticatedTrendsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/workout-log': {
       id: '/_authenticated/workout-log'
       path: '/workout-log'
       fullPath: '/workout-log'
       preLoaderRoute: typeof AuthenticatedWorkoutLogRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/workouts/': {
+      id: '/_authenticated/workouts/'
+      path: '/workouts'
+      fullPath: '/workouts/'
+      preLoaderRoute: typeof AuthenticatedWorkoutsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/workouts/$id': {
+      id: '/_authenticated/workouts/$id'
+      path: '/workouts/$id'
+      fullPath: '/workouts/$id'
+      preLoaderRoute: typeof AuthenticatedWorkoutsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/ingest-garmin': {
@@ -170,12 +266,22 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
+  AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
+  AuthenticatedTrendsRoute: typeof AuthenticatedTrendsRoute
   AuthenticatedWorkoutLogRoute: typeof AuthenticatedWorkoutLogRoute
+  AuthenticatedWorkoutsIdRoute: typeof AuthenticatedWorkoutsIdRoute
+  AuthenticatedWorkoutsIndexRoute: typeof AuthenticatedWorkoutsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
+  AuthenticatedTodayRoute: AuthenticatedTodayRoute,
+  AuthenticatedTrendsRoute: AuthenticatedTrendsRoute,
   AuthenticatedWorkoutLogRoute: AuthenticatedWorkoutLogRoute,
+  AuthenticatedWorkoutsIdRoute: AuthenticatedWorkoutsIdRoute,
+  AuthenticatedWorkoutsIndexRoute: AuthenticatedWorkoutsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

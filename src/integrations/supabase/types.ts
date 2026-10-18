@@ -233,6 +233,108 @@ export type Database = {
         }
         Relationships: []
       }
+      strength_sets: {
+        Row: {
+          activity_id: number
+          created_at: string
+          exercise: string
+          id: string
+          muscle_group: string
+          reps: number | null
+          set_number: number
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          activity_id: number
+          created_at?: string
+          exercise: string
+          id?: string
+          muscle_group: string
+          reps?: number | null
+          set_number: number
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          activity_id?: number
+          created_at?: string
+          exercise?: string
+          id?: string
+          muscle_group?: string
+          reps?: number | null
+          set_number?: number
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      user_goals: {
+        Row: {
+          age: number | null
+          cardio_minutes_target: number
+          current_weight: number | null
+          goal: string
+          max_hr: number | null
+          steps_goal: number
+          strength_target: number
+          target_weight: number | null
+          units: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          cardio_minutes_target?: number
+          current_weight?: number | null
+          goal?: string
+          max_hr?: number | null
+          steps_goal?: number
+          strength_target?: number
+          target_weight?: number | null
+          units?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          cardio_minutes_target?: number
+          current_weight?: number | null
+          goal?: string
+          max_hr?: number | null
+          steps_goal?: number
+          strength_target?: number
+          target_weight?: number | null
+          units?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weight_log: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          user_id: string
+          weight: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

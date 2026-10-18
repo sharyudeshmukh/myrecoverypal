@@ -1,11 +1,9 @@
-# Activity import
-- [x] Build private Garmin dashboard, daily trends, workout summaries, and evidence-based insights without changing ingestion or schemas.
-- [x] Test dashboard data rules and verify signed-in desktop/mobile views.
-- [x] Create owner-only Garmin daily/activity tables and token-protected ingestion endpoint; verify token rejection, counts, repeat upserts, owner reads, anonymous denial, and passing tests.
-- [x] Add private Cloud activity history and sign-in.
-- [x] Import CSV without inventing recovery details; support editing and duplicate prevention.
-- [x] Verify 280-row CSV preview, local save/reload, import tests, and successful build.
-- [ ] Verify legacy CSV account-backed import — requires the user’s selected source files; separate from this Garmin-table dashboard.
-- [x] Add private Garmin wellness imports with an unsaved preview of all uploaded exports.
-- [x] Add recovery outlook, training trends, VO₂ max, heart-rate baseline, and personalized fitness insights.
-- [x] Verify all nine export formats (280 distinct activities, 333 wellness rows), 11 tests, charts, and small-screen layout.
+# Goal-driven fitness app (lose weight + build muscle)
+- [x] Create user_goals, weight_log, strength_sets tables with owner-only RLS.
+- [x] Build goal engine: next-workout recommendation, HR zones, insights feed, strength volume.
+- [x] Extend dashboard server function with goals, weight log, strength sets.
+- [x] Build Today page: next-workout card, metric tiles with 7-day sparklines, steps target.
+- [x] Build Workouts list, workout detail (HR zones, splits, comparison, goal note), strength log on strength activities.
+- [x] Build Goals page: settings, weight log input, weight trend chart.
+- [x] Add bottom navigation (Today · Workouts · Trends · Goals); keep muscle-recovery cards.
+- [x] Tests for goal rules (17 new, 45 total), build clean, verify signed-in pages.
