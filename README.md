@@ -2,13 +2,14 @@
 
 # NextRep
 
-**Your Garmin data, turned into one clear answer: what should I train next?**
+**An end-to-end data product: Garmin data → metrics → a daily recommendation → an evaluation of whether it works.**
 
 Lose weight, build muscle: one clear next rep at a time.
 
-[**▶ Try the live demo**](https://myrecoverypal.lovable.app/demo) 
+[**▶ Try the live demo**](https://myrecoverypal.lovable.app/demo)
 
-<img src="docs/hero.gif" alt="NextRep: Today screen with next-workout recommendation, automatic muscle Recovery map, and a workout detail page with heart-rate zones and strength log" width="720" />
+<!-- Replace with a 10-second GIF of the Today screen → Recovery tab → a workout detail page -->
+<img src="docs/hero.gif" alt="NextRep: Today screen with next-workout recommendation" width="720" />
 
 </div>
 
@@ -29,6 +30,7 @@ The obvious fix was to pull the data into my own app. Then I hit the real proble
 | 📊 **Workout deep-dives** | Every session gets time in each heart-rate zone, splits, a comparison with the previous session of the same type, and a "what this did for your goal" note. |
 | 🔋 **Daily vitals** | Calories, steps, heart rate, Body Battery and stress, each with a 7-day trend. |
 | 📈 **Goal tracking** | Weight trend toward target, weekly strength and cardio targets, a streak counter, and a plain-English insights feed comparing this week with last week. |
+| 🧪 **Evaluation layer** | Logs each recommendation when it's made, classifies adherence automatically, and compares next-day recovery on followed vs not-followed days, with bootstrap confidence intervals. |
 | 👀 **Public demo mode** | 90 days of realistic seeded sample data, generated in the browser so no real health data is exposed. |
 
 ## Architecture
@@ -78,11 +80,40 @@ Each Garmin exercise category (e.g. `SQUAT`, `BENCH_PRESS`, `PUSH_UP`) maps to p
 **5. Recommendations people can trust.**
 The next-workout engine is **rule-based, not a black box**. Every recommendation shows the exact numbers that drove it, such as "Strength was yesterday · Body Battery 58 · 7 cardio minutes this week vs a 150-minute target", plus a lower-energy alternative.
 
+## Metric definitions
+
+| Metric | Definition | Data-quality rule |
+|---|---|---|
+| Recovery (Body Battery) | Wake value, else the day's high | Overnight values only count on nights with recorded sleep |
+| Resting heart rate | Garmin's daily resting HR | Trusted only on days with sleep data |
+| Stress | Daily average, 0–100 | `-1` / `-2` = no data → treated as missing |
+| Muscle fatigue | Sets × reps → muscles (primary 100%, secondary 50%), plus cardio leg load from time in HR zones 3–5, decaying over 36–48h | `UNKNOWN` sessions spread as full-body, labeled "estimated" |
+| Weekly targets | Strength sessions ≥ 3, cardio minutes ≥ 150 (user-set) | Calendar weeks in local time |
+| Adherence | Followed / partial (< 60% of duration) / swapped / skipped | Classified from that day's Garmin activities, with no manual input |
+
+## Evaluation: do the recommendations work?
+
+```mermaid
+flowchart LR
+    R["Recommendation<br/>logged when made<br/>(rule + input snapshot)"] --> A["Adherence<br/>auto-classified from<br/>next day's activities"]
+    A --> O["Next-day outcomes<br/>Body Battery · resting HR<br/>stress · weekly targets"]
+    O --> C["Followed vs not followed<br/>mean difference +<br/>90% bootstrap CI"]
+    C --> B["Breakdown by rule<br/>which rules earn<br/>their place"]
+```
+
+- **Logged when made, never recomputed,** so the evaluation judges what was actually recommended.
+- **Minimum sample size:** below 8 days per group, the app shows "not enough data yet" instead of a number.
+- **Replay backfill:** the current rules are run over the past 30 days to bootstrap the view. Those rows are labeled `replay` and excluded from headline numbers by default.
+- **Limitations:** single user, observational, not randomized, and subject to self-selection (I may skip when already tired). Results are associations, not causal effects. **Next step:** randomize between the recommended session and a default plan on eligible days.
+
+*Status: collecting live data. First results expected after 4–6 weeks.*
+
 ## Tech stack
 
 | Layer | Tools |
 |---|---|
 | Data sync | Python 3.12, `python-garminconnect`, `requests` |
+| Data & analysis | SQL, Postgres (`jsonb` raw payloads, views), bootstrap confidence intervals |
 | Scheduling | GitHub Actions (cron, manual backfill trigger) |
 | App | TypeScript, React, Tailwind CSS, shadcn/ui, built with [Lovable](https://lovable.dev) |
 | Backend | Lovable Cloud (Postgres, auth, row-level security, server routes) |
@@ -124,6 +155,9 @@ It runs hourly. Use **Actions → Garmin sync → Run workflow** with a `days` v
 
 ## Roadmap
 
+- [x] Evaluation layer: recommendation logging, automatic adherence, outcome comparison
+- [ ] Publish first evaluation results (after 4–6 weeks of live data)
+- [ ] Randomized comparison of recommended vs default sessions
 - [ ] Sleep- and HRV-based readiness score (now that the watch is worn overnight)
 - [ ] Multi-user support, so each person can connect their own Garmin
 - [ ] AI coach: plain-English weekly review and plan
