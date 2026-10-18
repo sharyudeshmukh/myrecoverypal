@@ -17,3 +17,8 @@
 
 - Keep dashboard reads in authenticated server functions with user-keyed Query caches; the protected route layout gates private pages and sign-out clears cached readings to prevent account leakage.
 - Compute daily dashboard rules and weekly summaries in the pure fitness-dashboard module so thresholds and missing-data behavior remain testable independently of charts.
+- Compute goal rules (next-workout engine, HR zones, insights feed, strength volume/overload) in the pure `src/lib/goals.ts` module with tests, so thresholds stay independent of UI.
+- Signed-in app pages live under `_authenticated/` with a shared bottom nav (Today `/today`, Workouts `/workouts`, Trends `/trends`, Goals `/goals`, Recovery `/workout-log`); `/` stays the public sign-in page and `/dashboard` redirects to `/trends`.
+- A list page with child detail routes must be an index route (`workouts.index.tsx`) — a plain `workouts.tsx` parent without an `<Outlet />` shadows its children.
+- Strength sets the user logs on a Garmin strength activity feed the muscle-recovery cards; recovery percentages still only use entries with full recovery details, never invented sleep/soreness values.
+
