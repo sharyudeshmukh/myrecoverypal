@@ -9,9 +9,9 @@ export const Route = createFileRoute('/_authenticated/workouts/')({
   },
   head: () => ({
     meta: [
-      { title: 'Workouts — MyRecoveryPal' },
+      { title: 'Workouts — NextRep' },
       { name: 'description', content: 'Every recorded session with type filters, weekly targets, and goal impact.' },
-      { property: 'og:title', content: 'Workouts — MyRecoveryPal' },
+      { property: 'og:title', content: 'Workouts — NextRep' },
       { property: 'og:description', content: 'Your Garmin sessions, weekly targets, and progress toward your goals.' },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },

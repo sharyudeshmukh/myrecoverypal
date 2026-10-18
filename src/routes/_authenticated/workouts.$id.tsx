@@ -11,9 +11,9 @@ export const Route = createFileRoute('/_authenticated/workouts/$id')({
   },
   head: () => ({
     meta: [
-      { title: 'Workout detail — MyRecoveryPal' },
+      { title: 'Workout detail — NextRep' },
       { name: 'description', content: 'Heart-rate zones, splits, comparison to your last session, and goal impact.' },
-      { property: 'og:title', content: 'Workout detail — MyRecoveryPal' },
+      { property: 'og:title', content: 'Workout detail — NextRep' },
       { property: 'og:description', content: 'Zones, splits, and what this session did for your goals.' },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },

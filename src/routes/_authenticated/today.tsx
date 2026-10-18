@@ -9,9 +9,9 @@ export const Route = createFileRoute("/_authenticated/today")({
   },
   head: () => ({
     meta: [
-      { title: 'Today — MyRecoveryPal' },
+      { title: 'Today — NextRep' },
       { name: 'description', content: "Your next workout recommendation, today's recovery metrics, and goal-driven insights." },
-      { property: 'og:title', content: 'Today — MyRecoveryPal' },
+      { property: 'og:title', content: 'Today — NextRep' },
       { property: 'og:description', content: "Next workout, today's recovery, and insights toward losing weight and building muscle." },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },

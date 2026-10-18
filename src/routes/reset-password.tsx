@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password — Recovery Tracker" }, {name: "description", content: "Reset your Recovery Tracker account password."}, {property: "og:title", content: "Reset password — Recovery Tracker"}, {property: "og:description", content: "Reset your Recovery Tracker account password."}, {property: "og:type", content: "website"}, {name: "twitter:card", content: "summary"}] }),
+  head: () => ({ meta: [{ title: "Reset password — NextRep" }, {name: "description", content: "Reset your NextRep account password."}, {property: "og:title", content: "Reset password — NextRep"}, {property: "og:description", content: "Reset your NextRep account password."}, {property: "og:type", content: "website"}, {name: "twitter:card", content: "summary"}] }),
   component: ResetPassword,
 });
 function ResetPassword() {
