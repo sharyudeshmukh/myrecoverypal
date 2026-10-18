@@ -18,7 +18,7 @@ import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTodayRouteImport } from './routes/_authenticated/today'
 import { Route as AuthenticatedTrendsRouteImport } from './routes/_authenticated/trends'
 import { Route as AuthenticatedWorkoutLogRouteImport } from './routes/_authenticated/workout-log'
-import { Route as AuthenticatedWorkoutsRouteImport } from './routes/_authenticated/workouts'
+import { Route as AuthenticatedWorkoutsIndexRouteImport } from './routes/_authenticated/workouts.index'
 import { Route as AuthenticatedWorkoutsIdRouteImport } from './routes/_authenticated/workouts.$id'
 import { Route as ApiPublicIngestGarminRouteImport } from './routes/api/public/ingest-garmin'
 
@@ -66,15 +66,16 @@ const AuthenticatedWorkoutLogRoute = AuthenticatedWorkoutLogRouteImport.update({
   path: '/workout-log',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedWorkoutsRoute = AuthenticatedWorkoutsRouteImport.update({
-  id: '/workouts',
-  path: '/workouts',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedWorkoutsIndexRoute =
+  AuthenticatedWorkoutsIndexRouteImport.update({
+    id: '/workouts/',
+    path: '/workouts/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedWorkoutsIdRoute = AuthenticatedWorkoutsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedWorkoutsRoute,
+  id: '/workouts/$id',
+  path: '/workouts/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiPublicIngestGarminRoute = ApiPublicIngestGarminRouteImport.update({
   id: '/api/public/ingest-garmin',
@@ -91,9 +92,9 @@ export interface FileRoutesByFullPath {
   '/today': typeof AuthenticatedTodayRoute
   '/trends': typeof AuthenticatedTrendsRoute
   '/workout-log': typeof AuthenticatedWorkoutLogRoute
-  '/workouts': typeof AuthenticatedWorkoutsRouteWithChildren
   '/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/workouts/': typeof AuthenticatedWorkoutsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -104,9 +105,9 @@ export interface FileRoutesByTo {
   '/today': typeof AuthenticatedTodayRoute
   '/trends': typeof AuthenticatedTrendsRoute
   '/workout-log': typeof AuthenticatedWorkoutLogRoute
-  '/workouts': typeof AuthenticatedWorkoutsRouteWithChildren
   '/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/workouts': typeof AuthenticatedWorkoutsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -119,9 +120,9 @@ export interface FileRoutesById {
   '/_authenticated/today': typeof AuthenticatedTodayRoute
   '/_authenticated/trends': typeof AuthenticatedTrendsRoute
   '/_authenticated/workout-log': typeof AuthenticatedWorkoutLogRoute
-  '/_authenticated/workouts': typeof AuthenticatedWorkoutsRouteWithChildren
   '/_authenticated/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/_authenticated/workouts/': typeof AuthenticatedWorkoutsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -134,9 +135,9 @@ export interface FileRouteTypes {
     | '/today'
     | '/trends'
     | '/workout-log'
-    | '/workouts'
     | '/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/workouts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -147,9 +148,9 @@ export interface FileRouteTypes {
     | '/today'
     | '/trends'
     | '/workout-log'
-    | '/workouts'
     | '/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/workouts'
   id:
     | '__root__'
     | '/'
@@ -161,9 +162,9 @@ export interface FileRouteTypes {
     | '/_authenticated/today'
     | '/_authenticated/trends'
     | '/_authenticated/workout-log'
-    | '/_authenticated/workouts'
     | '/_authenticated/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/_authenticated/workouts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -239,19 +240,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkoutLogRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/workouts': {
-      id: '/_authenticated/workouts'
+    '/_authenticated/workouts/': {
+      id: '/_authenticated/workouts/'
       path: '/workouts'
-      fullPath: '/workouts'
-      preLoaderRoute: typeof AuthenticatedWorkoutsRouteImport
+      fullPath: '/workouts/'
+      preLoaderRoute: typeof AuthenticatedWorkoutsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/workouts/$id': {
       id: '/_authenticated/workouts/$id'
-      path: '/$id'
+      path: '/workouts/$id'
       fullPath: '/workouts/$id'
       preLoaderRoute: typeof AuthenticatedWorkoutsIdRouteImport
-      parentRoute: typeof AuthenticatedWorkoutsRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/ingest-garmin': {
       id: '/api/public/ingest-garmin'
@@ -263,26 +264,14 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedWorkoutsRouteChildren {
-  AuthenticatedWorkoutsIdRoute: typeof AuthenticatedWorkoutsIdRoute
-}
-
-const AuthenticatedWorkoutsRouteChildren: AuthenticatedWorkoutsRouteChildren = {
-  AuthenticatedWorkoutsIdRoute: AuthenticatedWorkoutsIdRoute,
-}
-
-const AuthenticatedWorkoutsRouteWithChildren =
-  AuthenticatedWorkoutsRoute._addFileChildren(
-    AuthenticatedWorkoutsRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
   AuthenticatedTrendsRoute: typeof AuthenticatedTrendsRoute
   AuthenticatedWorkoutLogRoute: typeof AuthenticatedWorkoutLogRoute
-  AuthenticatedWorkoutsRoute: typeof AuthenticatedWorkoutsRouteWithChildren
+  AuthenticatedWorkoutsIdRoute: typeof AuthenticatedWorkoutsIdRoute
+  AuthenticatedWorkoutsIndexRoute: typeof AuthenticatedWorkoutsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -291,7 +280,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTodayRoute: AuthenticatedTodayRoute,
   AuthenticatedTrendsRoute: AuthenticatedTrendsRoute,
   AuthenticatedWorkoutLogRoute: AuthenticatedWorkoutLogRoute,
-  AuthenticatedWorkoutsRoute: AuthenticatedWorkoutsRouteWithChildren,
+  AuthenticatedWorkoutsIdRoute: AuthenticatedWorkoutsIdRoute,
+  AuthenticatedWorkoutsIndexRoute: AuthenticatedWorkoutsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
