@@ -34,7 +34,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, refresh, bus
   const sorted = daily.filter((d) => d.date <= today).sort((a, b) => b.date.localeCompare(a.date));
   const current = sorted.find((d) => d.date === today);
   const week7 = sorted.filter((d) => d.date >= shiftDate(today, -6));
-  const next = nextWorkout(daily, activities, goals, strengthSets, today);
+  const next = nextWorkout(daily, activities, goals, strengthSets, today, now);
   const insights = goalInsights(daily, activities, [], strengthSets, goals, today);
   const stepsGoal = goals?.steps_goal ?? DEFAULT_GOALS.steps_goal;
   const units = goals?.units ?? 'kg';

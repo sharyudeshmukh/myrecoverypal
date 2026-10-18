@@ -189,7 +189,7 @@ export function leastRecentlyTrained(strengthSets: StrengthSet[], activities: Wo
   }
   return [...MUSCLE_GROUPS].sort((a, b) => (lastByMuscle.get(a) ?? '0').localeCompare(lastByMuscle.get(b) ?? '0')).slice(0, 3);
 }
-export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals | null, strengthSets: StrengthSet[], today: string): NextWorkout {
+export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals | null, strengthSets: StrengthSet[], today: string, now = new Date(`${today}T12:00:00`).getTime()): NextWorkout {
   const f = trainingFacts(daily, activities, today);
   const maxHr = effectiveMaxHr(goals, daily, today);
   const stepsGoal = goals?.steps_goal ?? DEFAULT_GOALS.steps_goal;
@@ -225,7 +225,7 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
   // Rule 3: 2+ days since strength and battery >= 40 — unless cardio is behind target
   if (!cardioBehind && f.daysSinceStrength !== null && f.daysSinceStrength >= 2 && (battery == null || battery >= 40)) {
     if (strengthBehind) {
-      const muscles = computeGarminRecovery(activities, daily, new Date(`${today}T12:00:00`).getTime()).freshest;
+      const muscles = computeGarminRecovery(activities, daily, now).freshest;
       why.push(`It's been ${f.daysSinceStrength} days since your last strength session. Freshest estimated groups: ${muscles.join(', ')}.`);
       why.push(batteryText);
       why.push(`Strength is at ${f.strengthThisWeek} of ${strengthTarget} sessions this week.`);
@@ -244,7 +244,7 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
 
   // Rule 5: alternate strength / cardio
   if (strengthBehind) {
-    const muscles = computeGarminRecovery(activities, daily, new Date(`${today}T12:00:00`).getTime()).freshest;
+    const muscles = computeGarminRecovery(activities, daily, now).freshest;
     why.push(`Strength is at ${f.strengthThisWeek} of ${strengthTarget} sessions this week.`);
     why.push(batteryText);
     why.push('Alternating with cardio keeps muscle stimulus high while burning calories.');

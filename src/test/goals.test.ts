@@ -76,6 +76,12 @@ describe('nextWorkout rules', () => {
 });
 
 describe('muscle suggestions and overload', () => {
+  it('next workout suggests freshest Garmin muscles even without manual strength logs', () => {
+    const acts = [workout({ activity_id: 1, date: TODAY, type: 'running', duration_seconds: 9000 })];
+    const next = nextWorkout([], acts, goals, [], TODAY);
+    expect(next.type).toBe('strength');
+    expect(next.muscleGroups).toEqual(['chest', 'back', 'shoulders']);
+  });
   it('suggests least recently trained muscle groups', () => {
     const acts = [workout({ activity_id: 1, date: '2026-10-10', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-12', type: 'strength_training' })];
     const sets = [strengthSet(1, 'Squat', 'quads', 5, 60), strengthSet(2, 'Bench press', 'chest', 5, 40)];

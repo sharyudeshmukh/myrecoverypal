@@ -1,8 +1,8 @@
 # Goal-driven fitness app (lose weight + build muscle)
-- [ ] Rename all app branding and metadata to NextRep.
-- [ ] Make five bottom tabs prominent and accessible.
-- [ ] Replace Recovery with automatic Garmin fatigue and feed Today suggestions.
-- [ ] Test recovery rules and verify signed-in desktop/mobile flows.
+- [x] Rename all app branding and metadata to NextRep.
+- [x] Make five bottom tabs prominent and accessible.
+- [x] Replace Recovery with automatic Garmin fatigue and feed Today suggestions.
+- [x] Test recovery rules and verify signed-in desktop/mobile flows.
 - [x] Create user_goals, weight_log, strength_sets tables with owner-only RLS.
 - [x] Build goal engine: next-workout recommendation, HR zones, insights feed, strength volume.
 - [x] Extend dashboard server function with goals, weight log, strength sets.
