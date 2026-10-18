@@ -9,12 +9,13 @@ const goals: Goals = {
   updated_at: '2026-10-18T00:00:00Z',
 };
 function daily(over: Partial<Daily> & { date: string }): Daily {
+  const { date, ...rest } = over;
   return {
-    date: over.date, sleep_score: null, sleep_seconds: null, deep_sleep_seconds: null, rem_sleep_seconds: null,
+    date, sleep_score: null, sleep_seconds: null, deep_sleep_seconds: null, rem_sleep_seconds: null,
     light_sleep_seconds: null, awake_seconds: null, resting_hr: null, hrv_last_night_avg: null, hrv_weekly_avg: null,
     training_readiness: null, stress_avg: null, stress_max: null, body_battery_high: null, body_battery_low: null,
     body_battery_charged: null, body_battery_drained: null, body_battery_wake: null, steps: null, active_kcal: null,
-    intensity_minutes: null, hrv_status: null, training_readiness_level: null, raw: null, ...over,
+    intensity_minutes: null, hrv_status: null, training_readiness_level: null, raw: null, ...rest,
   };
 }
 function workout(over: Partial<Workout> & { activity_id: number; date: string; type: string }): Workout {
@@ -57,9 +58,9 @@ describe('nextWorkout rules', () => {
     expect(next.type).toBe('cardio');
     expect(next.intensity).toContain('114–133');
   });
-  it('strength when 2+ days since strength and battery is 40+', () => {
+  it('strength when 2+ days since strength, battery is 40+, and cardio is on track', () => {
     const d = daily({ date: TODAY, raw: { stats: { bodyBatteryMostRecentValue: 70 } } });
-    const acts = [workout({ activity_id: 1, date: '2026-10-15', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-16', type: 'running' })];
+    const acts = [workout({ activity_id: 1, date: '2026-10-15', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-16', type: 'running', duration_seconds: 9000 })];
     const next = nextWorkout([d], acts, goals, [strengthSet(1, 'Squat', 'quads', 5, 60)], TODAY);
     expect(next.type).toBe('strength');
     expect(next.muscleGroups).toBeTruthy();
@@ -94,11 +95,11 @@ describe('muscle suggestions and overload', () => {
 
 describe('insights feed', () => {
   it('compares workouts between the last and previous 7 days', () => {
-    const acts = [workout({ activity_id: 1, date: '2026-10-17', type: 'running' }), workout({ activity_id: 2, date: '2026-10-12', type: 'running' }), workout({ activity_id: 3, date: '2026-10-11', type: 'strength_training' })];
+    const acts = [workout({ activity_id: 1, date: '2026-10-17', type: 'running' }), workout({ activity_id: 2, date: '2026-10-12', type: 'running' }), workout({ activity_id: 3, date: '2026-10-09', type: 'strength_training' })];
     const { insights } = goalInsights([], acts, [], [], goals, TODAY);
     const rhythm = insights.find((i) => i.title === 'Training rhythm');
-    expect(rhythm?.text).toContain('1 workouts in the last 7 days');
-    expect(rhythm?.text).toContain('down from 2');
+    expect(rhythm?.text).toContain('2 workouts in the last 7 days');
+    expect(rhythm?.text).toContain('up from 1');
   });
   it('never fabricates weight without logged entries', () => {
     const { insights } = goalInsights([], [], [], [], goals, TODAY);
