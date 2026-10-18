@@ -24,7 +24,7 @@ export function generateDemoEvaluation(daily: Daily[], activities: Workout[], go
     const next = daily.find(x=>x.date === shiftDate(date,1));
     if (next && next.date !== today) {
       // Small simulated benefit + substantial noise: overlapping outcome distributions.
-      next.body_battery_wake = Math.round(72 + (followed ? 2 : 0) + (rand()-.5)*40);
+      next.body_battery_wake = Math.round(72 + (followed ? 1 : 0) + (rand()-.5)*40);
       next.body_battery_high = Math.max(next.body_battery_wake, next.body_battery_high ?? 0);
     }
     return base;

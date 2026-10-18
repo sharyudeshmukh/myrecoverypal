@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { bootstrapDifference, classifyAdherence, evaluateLogs, freezeRecommendation, replayHistory, weekProgress, type RecommendationLog } from '@/lib/evaluation';
 import { generateDemoData } from '@/lib/demo-data';
-import type { Workout } from '@/lib/fitness-dashboard';
+import type { Workout, Daily } from '@/lib/fitness-dashboard';
 
 const today = '2026-10-18';
 const demo = generateDemoData(today);
@@ -21,7 +21,7 @@ describe('automatic adherence',()=>{
   it('missing recovery zone evidence is uncertain rather than treated as confirmed',()=>expect(classifyAdherence(rec('recovery'),[activity('running')]).uncertain).toBe(true));
 });
 describe('missing-aware outcomes',()=>{
-  const next = {...demo.daily[0],date:'2026-10-17',body_battery_wake:null,body_battery_high:77,sleep_seconds:null,resting_hr:60,stress_avg:-1};
+  const next: Daily = {...demo.daily[0] as Daily,date:'2026-10-17',body_battery_wake:null,body_battery_high:77,sleep_seconds:null,resting_hr:60,stress_avg:-1};
   it('next-morning battery falls back to high',()=>expect(evaluateLogs([rec()],[next],[],today)[0]?.battery).toBe(77));
   it('resting HR without sleep is missing',()=>expect(evaluateLogs([rec()],[next],[],today)[0]?.restingHr).toBeNull());
   it('negative next-day stress is missing',()=>expect(evaluateLogs([rec()],[next],[],today)[0]?.stress).toBeNull());
