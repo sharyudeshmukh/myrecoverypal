@@ -15,11 +15,13 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEvaluationRouteImport } from './routes/_authenticated/evaluation'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
 import { Route as AuthenticatedTodayRouteImport } from './routes/_authenticated/today'
 import { Route as AuthenticatedTrendsRouteImport } from './routes/_authenticated/trends'
 import { Route as AuthenticatedWorkoutLogRouteImport } from './routes/_authenticated/workout-log'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
+import { Route as DemoEvaluationRouteImport } from './routes/demo.evaluation'
 import { Route as DemoGoalsRouteImport } from './routes/demo.goals'
 import { Route as DemoTodayRouteImport } from './routes/demo.today'
 import { Route as DemoTrendsRouteImport } from './routes/demo.trends'
@@ -60,6 +62,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEvaluationRoute = AuthenticatedEvaluationRouteImport.update({
+  id: '/evaluation',
+  path: '/evaluation',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
   id: '/goals',
   path: '/goals',
@@ -83,6 +90,11 @@ const AuthenticatedWorkoutLogRoute = AuthenticatedWorkoutLogRouteImport.update({
 const DemoIndexRoute = DemoIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoEvaluationRoute = DemoEvaluationRouteImport.update({
+  id: '/evaluation',
+  path: '/evaluation',
   getParentRoute: () => DemoRoute,
 } as any)
 const DemoGoalsRoute = DemoGoalsRouteImport.update({
@@ -143,10 +155,12 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/evaluation': typeof AuthenticatedEvaluationRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/today': typeof AuthenticatedTodayRoute
   '/trends': typeof AuthenticatedTrendsRoute
   '/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/demo/evaluation': typeof DemoEvaluationRoute
   '/demo/goals': typeof DemoGoalsRoute
   '/demo/today': typeof DemoTodayRoute
   '/demo/trends': typeof DemoTrendsRoute
@@ -164,10 +178,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/evaluation': typeof AuthenticatedEvaluationRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/today': typeof AuthenticatedTodayRoute
   '/trends': typeof AuthenticatedTrendsRoute
   '/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/demo/evaluation': typeof DemoEvaluationRoute
   '/demo/goals': typeof DemoGoalsRoute
   '/demo/today': typeof DemoTodayRoute
   '/demo/trends': typeof DemoTrendsRoute
@@ -188,10 +204,12 @@ export interface FileRoutesById {
   '/demo': typeof DemoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/evaluation': typeof AuthenticatedEvaluationRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/today': typeof AuthenticatedTodayRoute
   '/_authenticated/trends': typeof AuthenticatedTrendsRoute
   '/_authenticated/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/demo/evaluation': typeof DemoEvaluationRoute
   '/demo/goals': typeof DemoGoalsRoute
   '/demo/today': typeof DemoTodayRoute
   '/demo/trends': typeof DemoTrendsRoute
@@ -212,10 +230,12 @@ export interface FileRouteTypes {
     | '/demo'
     | '/reset-password'
     | '/dashboard'
+    | '/evaluation'
     | '/goals'
     | '/today'
     | '/trends'
     | '/workout-log'
+    | '/demo/evaluation'
     | '/demo/goals'
     | '/demo/today'
     | '/demo/trends'
@@ -233,10 +253,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/dashboard'
+    | '/evaluation'
     | '/goals'
     | '/today'
     | '/trends'
     | '/workout-log'
+    | '/demo/evaluation'
     | '/demo/goals'
     | '/demo/today'
     | '/demo/trends'
@@ -256,10 +278,12 @@ export interface FileRouteTypes {
     | '/demo'
     | '/reset-password'
     | '/_authenticated/dashboard'
+    | '/_authenticated/evaluation'
     | '/_authenticated/goals'
     | '/_authenticated/today'
     | '/_authenticated/trends'
     | '/_authenticated/workout-log'
+    | '/demo/evaluation'
     | '/demo/goals'
     | '/demo/today'
     | '/demo/trends'
@@ -327,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/evaluation': {
+      id: '/_authenticated/evaluation'
+      path: '/evaluation'
+      fullPath: '/evaluation'
+      preLoaderRoute: typeof AuthenticatedEvaluationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/goals': {
       id: '/_authenticated/goals'
       path: '/goals'
@@ -360,6 +391,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/demo/'
       preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/evaluation': {
+      id: '/demo/evaluation'
+      path: '/evaluation'
+      fullPath: '/demo/evaluation'
+      preLoaderRoute: typeof DemoEvaluationRouteImport
       parentRoute: typeof DemoRoute
     }
     '/demo/goals': {
@@ -437,6 +475,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEvaluationRoute: typeof AuthenticatedEvaluationRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
   AuthenticatedTrendsRoute: typeof AuthenticatedTrendsRoute
@@ -447,6 +486,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEvaluationRoute: AuthenticatedEvaluationRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedTodayRoute: AuthenticatedTodayRoute,
   AuthenticatedTrendsRoute: AuthenticatedTrendsRoute,
@@ -459,6 +499,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface DemoRouteChildren {
+  DemoEvaluationRoute: typeof DemoEvaluationRoute
   DemoGoalsRoute: typeof DemoGoalsRoute
   DemoTodayRoute: typeof DemoTodayRoute
   DemoTrendsRoute: typeof DemoTrendsRoute
@@ -469,6 +510,7 @@ interface DemoRouteChildren {
 }
 
 const DemoRouteChildren: DemoRouteChildren = {
+  DemoEvaluationRoute: DemoEvaluationRoute,
   DemoGoalsRoute: DemoGoalsRoute,
   DemoTodayRoute: DemoTodayRoute,
   DemoTrendsRoute: DemoTrendsRoute,
