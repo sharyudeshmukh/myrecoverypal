@@ -60,7 +60,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, refresh, bus
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-5">
           <Link to="/today" className="flex items-center gap-2 font-display text-base font-bold">
-            <Activity className="size-6 text-primary" />MyRecoveryPal<span className="hidden text-xs font-normal text-muted-foreground sm:inline">/ {DEFAULT_GOALS.goal.toUpperCase()}</span>
+            <Activity className="size-6 text-primary" />NextRep<span className="hidden text-xs font-normal text-muted-foreground sm:inline">/ {DEFAULT_GOALS.goal.toUpperCase()}</span>
           </Link>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" title="Refresh Garmin readings" aria-label="Refresh Garmin readings" disabled={busy} onClick={refresh}>

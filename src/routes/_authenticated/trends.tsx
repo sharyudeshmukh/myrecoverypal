@@ -10,9 +10,9 @@ export const Route = createFileRoute('/_authenticated/trends')({
   },
   head: () => ({
     meta: [
-      { title: 'Trends — MyRecoveryPal' },
+      { title: 'Trends — NextRep' },
       { name: 'description', content: 'Your daily Garmin recovery, sleep and movement trends, and weekly workouts.' },
-      { property: 'og:title', content: 'Trends — MyRecoveryPal' },
+      { property: 'og:title', content: 'Trends — NextRep' },
       { property: 'og:description', content: 'Private Garmin recovery trends and personalized fitness observations.' },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
