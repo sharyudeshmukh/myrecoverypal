@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Plus, Scale, Target, Trash2 } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { DEMO_TOAST, useDemoMode } from '@/lib/demo-context';
 import { DEFAULT_GOALS, weightSeries, type Goals, type WeightEntry } from '@/lib/goals';
 
 const tooltipStyle = { background: 'var(--popover)', borderColor: 'var(--border)', color: 'var(--foreground)', borderRadius: 6 };
 const dateLabel = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 export function GoalsPage({ goals, weightLog, onChanged }: { goals: Goals | null; weightLog: WeightEntry[]; onChanged: () => void }) {
+  const demo = useDemoMode();
   const today = new Date().toLocaleDateString('en-CA');
   const [form, setForm] = useState({
     goal: goals?.goal ?? DEFAULT_GOALS.goal,
@@ -31,6 +34,7 @@ export function GoalsPage({ goals, weightLog, onChanged }: { goals: Goals | null
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (demo) { toast(DEMO_TOAST); return; }
     setBusy(true); setError(''); setSaved(false);
     try {
       const { saveGoals } = await import('@/lib/goals.functions');
@@ -42,6 +46,7 @@ export function GoalsPage({ goals, weightLog, onChanged }: { goals: Goals | null
   };
   const addWeight = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (demo) { toast(DEMO_TOAST); return; }
     const w = Number(weightInput);
     if (!Number.isFinite(w) || w <= 0) { setError('Enter a valid weight.'); return; }
     setBusy(true); setError('');
@@ -54,6 +59,7 @@ export function GoalsPage({ goals, weightLog, onChanged }: { goals: Goals | null
     finally { setBusy(false); }
   };
   const removeWeight = async (id: string) => {
+    if (demo) { toast(DEMO_TOAST); return; }
     setBusy(true);
     try {
       const { deleteWeight } = await import('@/lib/goals.functions');

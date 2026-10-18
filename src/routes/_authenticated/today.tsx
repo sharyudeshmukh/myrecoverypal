@@ -31,6 +31,7 @@ function Today() {
       activities={data.activities}
       goals={data.goals}
       strengthSets={data.strengthSets}
+      weightLog={data.weightLog}
       busy={isFetching}
       refresh={() => {
         void queryClient.invalidateQueries({ queryKey: ['fitness-dashboard', userId] });

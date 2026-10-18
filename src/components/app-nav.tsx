@@ -1,5 +1,7 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { useRouterState } from '@tanstack/react-router';
 import { CalendarCheck, Dumbbell, LineChart, Target, HeartPulse } from 'lucide-react';
+import { AppLink } from '@/components/app-link';
+import { useDemoMode } from '@/lib/demo-context';
 
 const items = [
   { to: '/today', label: 'Today', icon: CalendarCheck },
@@ -11,12 +13,14 @@ const items = [
 
 export function AppNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
+  const demo = useDemoMode();
+  const base = demo ? '/demo' : '';
+  const isActive = (to: string) => pathname === `${base}${to}` || pathname.startsWith(`${base}${to}/`);
   return (
     <nav aria-label="Main navigation" className="app-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 backdrop-blur">
       <div className="mx-auto grid min-h-16 max-w-3xl grid-cols-5 items-stretch gap-1 px-2">
         {items.map(({ to, label, icon: Icon }) => (
-          <Link
+          <AppLink
             key={to}
             to={to}
             aria-current={isActive(to) ? 'page' : undefined}
@@ -25,7 +29,7 @@ export function AppNav() {
             {isActive(to) && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />}
             <Icon className="size-6" />
             {label}
-          </Link>
+          </AppLink>
         ))}
       </div>
     </nav>

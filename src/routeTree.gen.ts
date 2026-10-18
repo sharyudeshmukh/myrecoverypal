@@ -12,15 +12,23 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
 import { Route as AuthenticatedTodayRouteImport } from './routes/_authenticated/today'
 import { Route as AuthenticatedTrendsRouteImport } from './routes/_authenticated/trends'
 import { Route as AuthenticatedWorkoutLogRouteImport } from './routes/_authenticated/workout-log'
+import { Route as DemoIndexRouteImport } from './routes/demo.index'
+import { Route as DemoGoalsRouteImport } from './routes/demo.goals'
+import { Route as DemoTodayRouteImport } from './routes/demo.today'
+import { Route as DemoTrendsRouteImport } from './routes/demo.trends'
+import { Route as DemoWorkoutLogRouteImport } from './routes/demo.workout-log'
 import { Route as AuthenticatedWorkoutsIndexRouteImport } from './routes/_authenticated/workouts.index'
 import { Route as AuthenticatedWorkoutsIdRouteImport } from './routes/_authenticated/workouts.$id'
 import { Route as ApiPublicIngestGarminRouteImport } from './routes/api/public/ingest-garmin'
+import { Route as DemoWorkoutsIndexRouteImport } from './routes/demo.workouts.index'
+import { Route as DemoWorkoutsIdRouteImport } from './routes/demo.workouts.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,6 +42,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -66,6 +79,31 @@ const AuthenticatedWorkoutLogRoute = AuthenticatedWorkoutLogRouteImport.update({
   path: '/workout-log',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const DemoIndexRoute = DemoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoGoalsRoute = DemoGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoTodayRoute = DemoTodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoTrendsRoute = DemoTrendsRouteImport.update({
+  id: '/trends',
+  path: '/trends',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoWorkoutLogRoute = DemoWorkoutLogRouteImport.update({
+  id: '/workout-log',
+  path: '/workout-log',
+  getParentRoute: () => DemoRoute,
+} as any)
 const AuthenticatedWorkoutsIndexRoute =
   AuthenticatedWorkoutsIndexRouteImport.update({
     id: '/workouts/',
@@ -82,19 +120,37 @@ const ApiPublicIngestGarminRoute = ApiPublicIngestGarminRouteImport.update({
   path: '/api/public/ingest-garmin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoWorkoutsIndexRoute = DemoWorkoutsIndexRouteImport.update({
+  id: '/workouts/',
+  path: '/workouts/',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoWorkoutsIdRoute = DemoWorkoutsIdRouteImport.update({
+  id: '/workouts/$id',
+  path: '/workouts/$id',
+  getParentRoute: () => DemoRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/demo': typeof DemoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/today': typeof AuthenticatedTodayRoute
   '/trends': typeof AuthenticatedTrendsRoute
   '/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/demo/goals': typeof DemoGoalsRoute
+  '/demo/today': typeof DemoTodayRoute
+  '/demo/trends': typeof DemoTrendsRoute
+  '/demo/workout-log': typeof DemoWorkoutLogRoute
+  '/demo/': typeof DemoIndexRoute
   '/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/demo/workouts/$id': typeof DemoWorkoutsIdRoute
   '/workouts/': typeof AuthenticatedWorkoutsIndexRoute
+  '/demo/workouts/': typeof DemoWorkoutsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -105,39 +161,62 @@ export interface FileRoutesByTo {
   '/today': typeof AuthenticatedTodayRoute
   '/trends': typeof AuthenticatedTrendsRoute
   '/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/demo/goals': typeof DemoGoalsRoute
+  '/demo/today': typeof DemoTodayRoute
+  '/demo/trends': typeof DemoTrendsRoute
+  '/demo/workout-log': typeof DemoWorkoutLogRoute
+  '/demo': typeof DemoIndexRoute
   '/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/demo/workouts/$id': typeof DemoWorkoutsIdRoute
   '/workouts': typeof AuthenticatedWorkoutsIndexRoute
+  '/demo/workouts': typeof DemoWorkoutsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/demo': typeof DemoRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/today': typeof AuthenticatedTodayRoute
   '/_authenticated/trends': typeof AuthenticatedTrendsRoute
   '/_authenticated/workout-log': typeof AuthenticatedWorkoutLogRoute
+  '/demo/goals': typeof DemoGoalsRoute
+  '/demo/today': typeof DemoTodayRoute
+  '/demo/trends': typeof DemoTrendsRoute
+  '/demo/workout-log': typeof DemoWorkoutLogRoute
+  '/demo/': typeof DemoIndexRoute
   '/_authenticated/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
+  '/demo/workouts/$id': typeof DemoWorkoutsIdRoute
   '/_authenticated/workouts/': typeof AuthenticatedWorkoutsIndexRoute
+  '/demo/workouts/': typeof DemoWorkoutsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/demo'
     | '/reset-password'
     | '/dashboard'
     | '/goals'
     | '/today'
     | '/trends'
     | '/workout-log'
+    | '/demo/goals'
+    | '/demo/today'
+    | '/demo/trends'
+    | '/demo/workout-log'
+    | '/demo/'
     | '/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/demo/workouts/$id'
     | '/workouts/'
+    | '/demo/workouts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -148,29 +227,45 @@ export interface FileRouteTypes {
     | '/today'
     | '/trends'
     | '/workout-log'
+    | '/demo/goals'
+    | '/demo/today'
+    | '/demo/trends'
+    | '/demo/workout-log'
+    | '/demo'
     | '/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/demo/workouts/$id'
     | '/workouts'
+    | '/demo/workouts'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/demo'
     | '/reset-password'
     | '/_authenticated/dashboard'
     | '/_authenticated/goals'
     | '/_authenticated/today'
     | '/_authenticated/trends'
     | '/_authenticated/workout-log'
+    | '/demo/goals'
+    | '/demo/today'
+    | '/demo/trends'
+    | '/demo/workout-log'
+    | '/demo/'
     | '/_authenticated/workouts/$id'
     | '/api/public/ingest-garmin'
+    | '/demo/workouts/$id'
     | '/_authenticated/workouts/'
+    | '/demo/workouts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DemoRoute: typeof DemoRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicIngestGarminRoute: typeof ApiPublicIngestGarminRoute
 }
@@ -196,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -240,6 +342,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkoutLogRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/demo/': {
+      id: '/demo/'
+      path: '/'
+      fullPath: '/demo/'
+      preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/goals': {
+      id: '/demo/goals'
+      path: '/goals'
+      fullPath: '/demo/goals'
+      preLoaderRoute: typeof DemoGoalsRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/today': {
+      id: '/demo/today'
+      path: '/today'
+      fullPath: '/demo/today'
+      preLoaderRoute: typeof DemoTodayRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/trends': {
+      id: '/demo/trends'
+      path: '/trends'
+      fullPath: '/demo/trends'
+      preLoaderRoute: typeof DemoTrendsRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/workout-log': {
+      id: '/demo/workout-log'
+      path: '/workout-log'
+      fullPath: '/demo/workout-log'
+      preLoaderRoute: typeof DemoWorkoutLogRouteImport
+      parentRoute: typeof DemoRoute
+    }
     '/_authenticated/workouts/': {
       id: '/_authenticated/workouts/'
       path: '/workouts'
@@ -260,6 +397,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/ingest-garmin'
       preLoaderRoute: typeof ApiPublicIngestGarminRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/demo/workouts/': {
+      id: '/demo/workouts/'
+      path: '/workouts'
+      fullPath: '/demo/workouts/'
+      preLoaderRoute: typeof DemoWorkoutsIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/workouts/$id': {
+      id: '/demo/workouts/$id'
+      path: '/workouts/$id'
+      fullPath: '/demo/workouts/$id'
+      preLoaderRoute: typeof DemoWorkoutsIdRouteImport
+      parentRoute: typeof DemoRoute
     }
   }
 }
@@ -287,10 +438,33 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface DemoRouteChildren {
+  DemoGoalsRoute: typeof DemoGoalsRoute
+  DemoTodayRoute: typeof DemoTodayRoute
+  DemoTrendsRoute: typeof DemoTrendsRoute
+  DemoWorkoutLogRoute: typeof DemoWorkoutLogRoute
+  DemoIndexRoute: typeof DemoIndexRoute
+  DemoWorkoutsIdRoute: typeof DemoWorkoutsIdRoute
+  DemoWorkoutsIndexRoute: typeof DemoWorkoutsIndexRoute
+}
+
+const DemoRouteChildren: DemoRouteChildren = {
+  DemoGoalsRoute: DemoGoalsRoute,
+  DemoTodayRoute: DemoTodayRoute,
+  DemoTrendsRoute: DemoTrendsRoute,
+  DemoWorkoutLogRoute: DemoWorkoutLogRoute,
+  DemoIndexRoute: DemoIndexRoute,
+  DemoWorkoutsIdRoute: DemoWorkoutsIdRoute,
+  DemoWorkoutsIndexRoute: DemoWorkoutsIndexRoute,
+}
+
+const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  DemoRoute: DemoRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicIngestGarminRoute: ApiPublicIngestGarminRoute,
 }

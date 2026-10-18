@@ -1,8 +1,10 @@
-import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { ArrowLeft, Clock, Flame, MapPin, Plus, Trash2, Gauge } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { AppLink } from '@/components/app-link';
+import { DEMO_TOAST, useDemoMode } from '@/lib/demo-context';
 import { LABELS, workoutType, type Daily, type Workout } from '@/lib/fitness-dashboard';
 import { HR_ZONES, avgPaceMinPerKm, effectiveMaxHr, exerciseOptions, goalNote, muscleForExercise, progressiveOverload, splits, timeInZones, type Goals, type StrengthSet } from '@/lib/goals';
 import type { Tables } from '@/integrations/supabase/types';
@@ -30,6 +32,7 @@ function delta(now: number | null, before: number | null, unit: string, invert =
 }
 
 export function WorkoutDetail({ activity, previous, sets, daily, goals, onSetsChanged }: { activity: Tables<'garmin_activities'>; previous: Tables<'garmin_activities'> | null; sets: StrengthSet[]; daily: Daily[]; goals: Goals | null; onSetsChanged: () => void }) {
+  const demo = useDemoMode();
   const today = new Date().toLocaleDateString('en-CA');
   const t = workoutType(activity.type);
   const isRun = t === 'running' || t === 'treadmill_running';
@@ -57,6 +60,7 @@ export function WorkoutDetail({ activity, previous, sets, daily, goals, onSetsCh
 
   const addSet = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (demo) { toast(DEMO_TOAST); return; }
     const muscle = muscleForExercise(exercise);
     if (!exercise.trim() || !muscle) { setError('Pick an exercise from the list so we can map it to a muscle group.'); return; }
     setBusy(true); setError('');
@@ -70,6 +74,7 @@ export function WorkoutDetail({ activity, previous, sets, daily, goals, onSetsCh
     finally { setBusy(false); }
   };
   const removeSet = async (id: string) => {
+    if (demo) { toast(DEMO_TOAST); return; }
     setBusy(true); setError('');
     try {
       const { deleteStrengthSet } = await import('@/lib/goals.functions');
@@ -83,7 +88,7 @@ export function WorkoutDetail({ activity, previous, sets, daily, goals, onSetsCh
     <div>
       <header className="border-b">
         <div className="mx-auto max-w-5xl px-5 py-6">
-          <Link to="/workouts" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />All workouts</Link>
+          <AppLink to="/workouts" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />All workouts</AppLink>
           <p className="text-xs font-medium uppercase text-primary">{LABELS[t]}</p>
           <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{activity.name ?? LABELS[t]}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{dateLabel(activity.start_time_local?.slice(0, 10) ?? today)}</p>
@@ -114,7 +119,7 @@ export function WorkoutDetail({ activity, previous, sets, daily, goals, onSetsCh
         </section>
 
         {hasZones && (
-          <section>
+          <section data-tour="workout-zones">
             <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold"><Gauge className="size-4 text-primary" />Time in heart-rate zones</h2>
             <p className="mb-4 text-xs text-muted-foreground">Max HR {Math.round(maxHr)} bpm{goals?.max_hr == null && goals?.age == null ? ' (from your recent workouts)' : ''}</p>
             <div className="h-52 rounded-lg border bg-card p-4">
