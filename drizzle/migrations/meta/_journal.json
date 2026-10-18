@@ -29,6 +29,13 @@
       "when": 1792276378004,
       "tag": "0003_restrict_garmin_table_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792283155015,
+      "tag": "0004_goal_settings_strength_sets",
+      "breakpoints": true
     }
   ]
 }
