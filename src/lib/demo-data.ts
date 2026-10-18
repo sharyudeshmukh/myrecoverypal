@@ -113,10 +113,12 @@ export function generateDemoData(today: string): DemoData {
   }
 
   // ---- Workouts: 3 strength + 3 cardio a week, progressive overload ----
-  // Weekly cycle: upper, run, run, lower, run, full, rest. Overridden below so
-  // the story is always the same: lower body yesterday, upper body fresh today.
+  // Weekly cycle rotated so the story is always the same: lower body was
+  // trained yesterday, upper body is fresh today, and 4 days back is a rest
+  // day (so the recovery rule doesn't trigger).
   const CYCLE: (null | 'upper' | 'lower' | 'full' | 'run')[] = ['upper', 'run', 'run', 'lower', 'run', 'full', null];
-  const totalRuns = dates.filter((_, i) => CYCLE[i % 7] === 'run').length;
+  const cycleOffset = DAYS - 5; // index of yesterday within the cycle alignment
+  const totalRuns = dates.filter((_, i) => CYCLE[(((i - cycleOffset) % 7) + 7) % 7] === 'run').length;
   const activities: Workout[] = [];
   const strengthSets: StrengthSet[] = [];
   let runCount = 0;
@@ -124,8 +126,7 @@ export function generateDemoData(today: string): DemoData {
   const zoneSeconds = (duration: number, pcts: number[]) => pcts.map((pct) => Math.round((duration * pct) / 100));
 
   for (let i = 0; i < DAYS; i++) {
-    let kind = CYCLE[i % 7];
-    if (i === DAYS - 2) kind = 'lower'; // legs trained yesterday
+    let kind = CYCLE[(((i - cycleOffset) % 7) + 7) % 7];
     if (i === DAYS - 1) kind = null; // today's session not done yet
     if (kind === null) continue;
     const date = dates[i] as string;
