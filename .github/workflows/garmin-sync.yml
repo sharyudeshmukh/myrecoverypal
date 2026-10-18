@@ -1,0 +1,38 @@
+# Put this file in your repo at: .github/workflows/garmin-sync.yml
+name: Garmin sync
+
+on:
+  schedule:
+    - cron: "17 * * * *"   # every hour at :17 (UTC). Use "*/30 * * * *" for every 30 min.
+  workflow_dispatch:         # lets you hit "Run workflow" manually (e.g. for a backfill)
+    inputs:
+      days:
+        description: "Days to sync"
+        default: "2"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install "garminconnect>=0.3" requests
+
+      - name: Restore Garmin tokens
+        run: |
+          mkdir -p ~/.garminconnect
+          printf '%s' "$GARMIN_TOKENS" > ~/.garminconnect/garmin_tokens.json
+          chmod 600 ~/.garminconnect/garmin_tokens.json
+        env:
+          GARMIN_TOKENS: ${{ secrets.GARMIN_TOKENS }}
+
+      - name: Sync
+        run: python garmin_sync.py --days "${{ github.event.inputs.days || '2' }}"
+        env:
+          TZ: America/Los_Angeles   # so "today" means your local day, not UTC
+          INGEST_URL: ${{ secrets.INGEST_URL }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
