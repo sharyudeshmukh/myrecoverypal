@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 export const Route = createFileRoute('/_authenticated/dashboard')({
   beforeLoad: () => {
-    throw redirect({ to: '/trends', search: { days: 30 } });
+    throw redirect({ to: '/trends' });
   },
 });

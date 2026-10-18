@@ -103,13 +103,13 @@ export function splits(a: Workout): Split[] {
   if (!Array.isArray(raw?.splitSummaries)) return [];
   return raw.splitSummaries.map((s, i) => {
     const item = (s ?? {}) as Record<string, unknown>;
-    const dist = num(item.distance) ?? null;
-    const speed = num(item.averageSpeed) ?? null;
+    const dist = num(item['distance']) ?? null;
+    const speed = num(item['averageSpeed']) ?? null;
     return {
       index: i + 1,
       distanceKm: dist === null ? null : dist / 1000,
       paceMinPerKm: dist !== null && dist > 0 && speed !== null && speed > 0 ? 1000 / speed / 60 : null,
-      avgHr: num(item.averageHR) ?? num(item.averageHeartRate) ?? null,
+      avgHr: num(item['averageHR']) ?? num(item['averageHeartRate']) ?? null,
     };
   });
 }
@@ -174,7 +174,7 @@ export type NextWorkout = {
   intensity: string;
   why: string[];
   lowEnergy: string;
-  muscleGroups?: MuscleGroup[];
+  muscleGroups?: MuscleGroup[] | undefined;
 };
 export function leastRecentlyTrained(strengthSets: StrengthSet[], activities: Workout[], today: string): MuscleGroup[] {
   const dateByActivity = new Map(activities.map((a) => [a.activity_id, a.start_time_local?.slice(0, 10) ?? null]));
@@ -217,13 +217,13 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
     return { type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min of the same cardio at the lower end of the range, or a brisk walk.' };
   }
 
-  // Rule 4: cardio behind weekly target → prefer cardio (checked before strength)
+  // Rule 4: cardio behind weekly target → prefer cardio over strength
   const cardioBehind = f.cardioMinutesThisWeek < cardioTarget;
   const strengthBehind = f.strengthThisWeek < strengthTarget;
 
-  // Rule 3: 2+ days since strength and battery >= 40
-  if (f.daysSinceStrength !== null && f.daysSinceStrength >= 2 && (battery == null || battery >= 40)) {
-    if (!cardioBehind || !strengthBehind) {
+  // Rule 3: 2+ days since strength and battery >= 40 — unless cardio is behind target
+  if (!cardioBehind && f.daysSinceStrength !== null && f.daysSinceStrength >= 2 && (battery == null || battery >= 40)) {
+    if (strengthBehind) {
       const muscles = leastRecentlyTrained(strengthSets, activities, today);
       why.push(`It's been ${f.daysSinceStrength} days since your last strength session — muscles are recovered.`);
       why.push(batteryText);
