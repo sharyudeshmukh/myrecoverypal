@@ -36,6 +36,13 @@
       "when": 1792283155015,
       "tag": "0004_goal_settings_strength_sets",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792301509598,
+      "tag": "0005_recommendation_evaluation",
+      "breakpoints": true
     }
   ]
 }
