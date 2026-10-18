@@ -32,6 +32,7 @@ function status(p: number) {
 
 function Index() {
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [strengthEntries, setStrengthEntries] = useState<Entry[]>([]);
   const [wellness, setWellness] = useState<Wellness[]>([]);
   const [localEntries, setLocalEntries] = useState<Entry[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -53,6 +54,24 @@ function Index() {
       if (row.values && typeof row.values === "object" && !Array.isArray(row.values)) Object.entries(row.values).forEach(([key,value]) => {values[key] = typeof value === "number" ? value : null;});
       return {metric:row.metric,date:row.date,period:row.period,values};
     }));
+    // Strength sets logged on Garmin strength workouts feed the muscle-recovery cards.
+    const [setRows, actRows] = await Promise.all([
+      supabase.from("strength_sets").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("garmin_activities").select("activity_id,start_time_local,type"),
+    ]);
+    if (setRows.error) throw setRows.error;
+    if (actRows.error) throw actRows.error;
+    const dates = new Map(actRows.data.map(a => [a.activity_id, a.start_time_local ? a.start_time_local.replace(" ", "T") : new Date().toISOString()]));
+    const byExercise = new Map<string, Entry>();
+    for (const s of setRows.data) {
+      const muscle = (s.muscle_group.charAt(0).toUpperCase() + s.muscle_group.slice(1)) as Muscle;
+      if (!MUSCLES.includes(muscle)) continue;
+      const key = `${s.activity_id}:${s.exercise}`;
+      const entry = byExercise.get(key);
+      if (entry) { if (!entry.muscles.includes(muscle)) entry.muscles.push(muscle); }
+      else byExercise.set(key, { id: `set-${key}`, date: dates.get(s.activity_id) ?? new Date().toISOString(), type: "Strength", title: s.exercise, muscles: [muscle], intensity: null, sleep: null, soreness: null, source_key: null });
+    }
+    setStrengthEntries([...byExercise.values()]);
   }, []);
   useEffect(() => {
     try { const saved = JSON.parse(localStorage.getItem(KEY) || "[]"); if (Array.isArray(saved)) setLocalEntries(saved); } catch {}
