@@ -138,6 +138,6 @@ It runs hourly. Use **Actions → Garmin sync → Run workflow** with a `days` v
 
 <div align="center">
 
-Built by **Sharyu Deshmukh** · [Portfolio](#) · [LinkedIn](#)
+Built by **Sharyu Deshmukh** · [LinkedIn](https://www.linkedin.com/in/sharyu02deshmukh/)
 
 </div>
