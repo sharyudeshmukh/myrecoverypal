@@ -43,7 +43,8 @@ describe('automatic Garmin recovery', () => {
     expect(remainingFatigue(100, 48, 'chest', 39)).toBeGreaterThan(remainingFatigue(100, 48, 'chest', 40));
   });
   it('uses only today’s battery, including zero', () => {
-    const daily = [{ date: '2026-10-18', body_battery_high: 80, raw: { stats: { bodyBatteryMostRecentValue: 0 } } }] as Daily[];
+    const day: Daily = { date: '2026-10-18', body_battery_high: 80, raw: { stats: { bodyBatteryMostRecentValue: 0 } }, active_kcal: null, awake_seconds: null, body_battery_charged: null, body_battery_drained: null, body_battery_low: null, body_battery_wake: null, deep_sleep_seconds: null, hrv_last_night_avg: null, hrv_status: null, hrv_weekly_avg: null, intensity_minutes: null, light_sleep_seconds: null, rem_sleep_seconds: null, resting_hr: null, sleep_score: null, sleep_seconds: null, steps: null, stress_avg: null, stress_max: null, training_readiness: null, training_readiness_level: null };
+    const daily = [day];
     expect(todayRecoveryBattery(daily, '2026-10-18')).toBe(0);
     expect(todayRecoveryBattery(daily, '2026-10-19')).toBeNull();
   });
