@@ -3,7 +3,7 @@ import { useSuspenseQuery, useQueryClient, useQueryErrorResetBoundary } from '@t
 import { dashboardQuery } from '@/lib/fitness-dashboard.query';
 import { TodayPage } from '@/components/today-page';
 import { Button } from '@/components/ui/button';
-export const Route = createFileRoute('/_authenticated/')({
+export const Route = createFileRoute("/_authenticated/today")({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(dashboardQuery(context.userId));
   },
