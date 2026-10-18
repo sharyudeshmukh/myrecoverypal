@@ -350,7 +350,7 @@ export function goalInsights(daily: Daily[], activities: Workout[], weightLog: W
   const bestRunBefore = bestIn(runs.filter((a) => (dayOf(a) as string) < winStart));
   if (bestRunNow > 0 && bestRunNow > bestRunBefore) {
     insights.push({
-      title: 'Personal best',
+      title: 'Personal best: run',
       text: `Longest run so far: ${(bestRunNow / 1000).toFixed(2)} km${bestRunBefore > 0 ? ` — up from ${(bestRunBefore / 1000).toFixed(2)} km` : ''}.`,
       tone: 'up',
     });
@@ -372,7 +372,7 @@ export function goalInsights(daily: Daily[], activities: Workout[], weightLog: W
   }
   if (liftPr) {
     insights.push({
-      title: 'Personal best',
+      title: 'Personal best: lift',
       text: `Heaviest ${liftPr.exercise} so far: ${liftPr.now} (up from ${liftPr.before}).`,
       tone: 'up',
     });

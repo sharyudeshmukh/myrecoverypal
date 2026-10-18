@@ -54,7 +54,7 @@ describe('demo data', () => {
   it('surfaces personal-best insights', () => {
     const data = generateDemoData(TODAY);
     const { insights } = goalInsights(data.daily, data.activities, data.weightLog, data.strengthSets, data.goals, TODAY);
-    const bests = insights.filter((i) => i.title === 'Personal best');
+    const bests = insights.filter((i) => i.title.startsWith('Personal best'));
     expect(bests.length).toBeGreaterThanOrEqual(2);
     expect(bests.some((b) => b.text.includes('km'))).toBe(true);
   });

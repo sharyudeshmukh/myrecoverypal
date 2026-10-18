@@ -133,13 +133,13 @@ describe('insights feed', () => {
   it('surfaces a longest-run personal best in the last 4 weeks', () => {
     const acts = [workout({ activity_id: 1, date: '2026-09-01', type: 'running', distance_meters: 4200 }), workout({ activity_id: 2, date: '2026-10-10', type: 'running', distance_meters: 5000 })];
     const { insights } = goalInsights([], acts, [], [], goals, TODAY);
-    expect(insights.some((i) => i.title === 'Personal best' && i.text.includes('5.00 km'))).toBe(true);
+    expect(insights.some((i) => i.title.startsWith('Personal best') && i.text.includes('5.00 km'))).toBe(true);
   });
   it('surfaces a heaviest-lift personal best', () => {
     const acts = [workout({ activity_id: 1, date: '2026-09-01', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-16', type: 'strength_training' })];
     const sets = [strengthSet(1, 'Squat', 'quads', 5, 120), strengthSet(2, 'Squat', 'quads', 5, 130)];
     const { insights } = goalInsights([], acts, [], sets, goals, TODAY);
-    expect(insights.some((i) => i.title === 'Personal best' && i.text.includes('Squat'))).toBe(true);
+    expect(insights.some((i) => i.title.startsWith('Personal best') && i.text.includes('Squat'))).toBe(true);
   });
 });
 

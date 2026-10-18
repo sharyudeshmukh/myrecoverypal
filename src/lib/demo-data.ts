@@ -200,7 +200,6 @@ export function generateDemoData(today: string): DemoData {
         { category: 'LUNGE', sets: 3, reps: 10, duration: null, weight: roundW(prog(40, 55, i) * scale) },
         { category: 'HIP_RAISE', sets: 3, reps: 10, duration: null, weight: roundW(prog(95, 135, i) * scale) },
         { category: 'CALF_RAISE', sets: 3, reps: 15, duration: null, weight: roundW(prog(60, 80, i) * scale) },
-        { category: 'PLANK', sets: 3, reps: null, duration: Math.round(prog(45, 90, i)), weight: null },
       ];
     } else {
       name = 'Full body strength';
