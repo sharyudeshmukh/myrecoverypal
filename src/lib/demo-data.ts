@@ -127,6 +127,7 @@ export function generateDemoData(today: string): DemoData {
 
   for (let i = 0; i < DAYS; i++) {
     let kind = CYCLE[(((i - cycleOffset) % 7) + 7) % 7];
+    if (i === DAYS - 5) kind = null; // rest 4 days back → 3 consecutive training days
     if (i === DAYS - 1) kind = null; // today's session not done yet
     if (kind === null) continue;
     const date = dates[i] as string;
