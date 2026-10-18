@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useDemoMode } from '@/lib/demo-context';
 
 // Internal app link that stays inside /demo when demo mode is active.
-export function AppLink({ to, params, className, children, ...rest }: { to: string; params?: Record<string, string>; className?: string; children: ReactNode; 'aria-current'?: 'page' }) {
+export function AppLink({ to, params, className, children, ...rest }: { to: string; params?: Record<string, string>; className?: string; children: ReactNode; 'aria-current'?: 'page' | undefined }) {
   const demo = useDemoMode();
   if (demo) {
     let href = `/demo${to}`;
