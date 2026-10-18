@@ -26,6 +26,7 @@ import { Route as DemoTrendsRouteImport } from './routes/demo.trends'
 import { Route as DemoWorkoutLogRouteImport } from './routes/demo.workout-log'
 import { Route as AuthenticatedWorkoutsIndexRouteImport } from './routes/_authenticated/workouts.index'
 import { Route as AuthenticatedWorkoutsIdRouteImport } from './routes/_authenticated/workouts.$id'
+import { Route as ApiPublicEvaluateGarminRouteImport } from './routes/api/public/evaluate-garmin'
 import { Route as ApiPublicIngestGarminRouteImport } from './routes/api/public/ingest-garmin'
 import { Route as DemoWorkoutsIndexRouteImport } from './routes/demo.workouts.index'
 import { Route as DemoWorkoutsIdRouteImport } from './routes/demo.workouts.$id'
@@ -115,6 +116,11 @@ const AuthenticatedWorkoutsIdRoute = AuthenticatedWorkoutsIdRouteImport.update({
   path: '/workouts/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicEvaluateGarminRoute = ApiPublicEvaluateGarminRouteImport.update({
+  id: '/api/public/evaluate-garmin',
+  path: '/api/public/evaluate-garmin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicIngestGarminRoute = ApiPublicIngestGarminRouteImport.update({
   id: '/api/public/ingest-garmin',
   path: '/api/public/ingest-garmin',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/demo/workout-log': typeof DemoWorkoutLogRoute
   '/demo/': typeof DemoIndexRoute
   '/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
+  '/api/public/evaluate-garmin': typeof ApiPublicEvaluateGarminRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
   '/demo/workouts/$id': typeof DemoWorkoutsIdRoute
   '/workouts/': typeof AuthenticatedWorkoutsIndexRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/demo/workout-log': typeof DemoWorkoutLogRoute
   '/demo': typeof DemoIndexRoute
   '/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
+  '/api/public/evaluate-garmin': typeof ApiPublicEvaluateGarminRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
   '/demo/workouts/$id': typeof DemoWorkoutsIdRoute
   '/workouts': typeof AuthenticatedWorkoutsIndexRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/demo/workout-log': typeof DemoWorkoutLogRoute
   '/demo/': typeof DemoIndexRoute
   '/_authenticated/workouts/$id': typeof AuthenticatedWorkoutsIdRoute
+  '/api/public/evaluate-garmin': typeof ApiPublicEvaluateGarminRoute
   '/api/public/ingest-garmin': typeof ApiPublicIngestGarminRoute
   '/demo/workouts/$id': typeof DemoWorkoutsIdRoute
   '/_authenticated/workouts/': typeof AuthenticatedWorkoutsIndexRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/demo/workout-log'
     | '/demo/'
     | '/workouts/$id'
+    | '/api/public/evaluate-garmin'
     | '/api/public/ingest-garmin'
     | '/demo/workouts/$id'
     | '/workouts/'
@@ -233,6 +243,7 @@ export interface FileRouteTypes {
     | '/demo/workout-log'
     | '/demo'
     | '/workouts/$id'
+    | '/api/public/evaluate-garmin'
     | '/api/public/ingest-garmin'
     | '/demo/workouts/$id'
     | '/workouts'
@@ -255,6 +266,7 @@ export interface FileRouteTypes {
     | '/demo/workout-log'
     | '/demo/'
     | '/_authenticated/workouts/$id'
+    | '/api/public/evaluate-garmin'
     | '/api/public/ingest-garmin'
     | '/demo/workouts/$id'
     | '/_authenticated/workouts/'
@@ -267,6 +279,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicEvaluateGarminRoute: typeof ApiPublicEvaluateGarminRoute
   ApiPublicIngestGarminRoute: typeof ApiPublicIngestGarminRoute
 }
 
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkoutsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/evaluate-garmin': {
+      id: '/api/public/evaluate-garmin'
+      path: '/api/public/evaluate-garmin'
+      fullPath: '/api/public/evaluate-garmin'
+      preLoaderRoute: typeof ApiPublicEvaluateGarminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/ingest-garmin': {
       id: '/api/public/ingest-garmin'
       path: '/api/public/ingest-garmin'
@@ -466,6 +486,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DemoRoute: DemoRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicEvaluateGarminRoute: ApiPublicEvaluateGarminRoute,
   ApiPublicIngestGarminRoute: ApiPublicIngestGarminRoute,
 }
 export const routeTree = rootRouteImport
