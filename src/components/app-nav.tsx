@@ -2,7 +2,7 @@ import { Link, useRouterState } from '@tanstack/react-router';
 import { CalendarCheck, Dumbbell, LineChart, Target, HeartPulse } from 'lucide-react';
 
 const items = [
-  { to: '/', label: 'Today', icon: CalendarCheck },
+  { to: '/today', label: 'Today', icon: CalendarCheck },
   { to: '/workouts', label: 'Workouts', icon: Dumbbell },
   { to: '/trends', label: 'Trends', icon: LineChart },
   { to: '/goals', label: 'Goals', icon: Target },
@@ -10,7 +10,7 @@ const items = [
 
 export function AppNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isActive = (to: string) => (to === '/' ? pathname === '/' : pathname === to || pathname.startsWith(`${to}/`));
+  const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
   return (
     <nav aria-label="Main navigation" className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-stretch justify-between px-2">
