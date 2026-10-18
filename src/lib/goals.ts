@@ -170,6 +170,7 @@ export function trainingFacts(daily: Daily[], activities: Workout[], today: stri
 // ---- Next-workout recommendation engine ----
 export type NextWorkout = {
   type: 'recovery' | 'cardio' | 'strength';
+  ruleId: string;
   title: string;
   duration: string;
   intensity: string;
@@ -206,7 +207,7 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
     why.push(battery != null && battery < 25 ? `Body Battery is ${Math.round(battery)}/100 — below the 25 recovery threshold.` : `You've trained ${f.consecutiveDays} days in a row.`);
     why.push(sleepText);
     why.push('Easy movement keeps fat-burning volume up while muscle repair catches up.');
-    return { type: 'recovery', title: 'Recovery: easy walk + mobility', duration: '30–45 min walk + 10 min mobility', intensity: 'Zone 1 · under ' + Math.round(maxHr * 0.6) + ' bpm', why, lowEnergy: '10 min of gentle stretching or a slow 15 min walk.' };
+    return { ruleId: battery != null && battery < 25 ? 'low_bb_recovery' : 'consecutive_training_recovery', type: 'recovery', title: 'Recovery: easy walk + mobility', duration: '30–45 min walk + 10 min mobility', intensity: 'Zone 1 · under ' + Math.round(maxHr * 0.6) + ' bpm', why, lowEnergy: '10 min of gentle stretching or a slow 15 min walk.' };
   }
 
   // Rule 2: strength yesterday or today — train the muscle groups that are
@@ -221,19 +222,19 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
       why.push(f.daysSinceStrength === 0 ? 'You already did strength training today — but these groups are fully recovered.' : 'Lower body was trained recently and is still recovering.');
       why.push(`Estimated recovery: ${fresh.join(', ')} are ready for work.`);
       why.push(batteryText);
-      return { type: 'strength', title: 'Strength: upper body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min upper session with lighter weights.', muscleGroups: fresh.slice(0, 3) };
+      return { ruleId: 'fresh_upper_strength', type: 'strength', title: 'Strength: upper body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min upper session with lighter weights.', muscleGroups: fresh.slice(0, 3) };
     }
     if (fresh.length >= 3 && lowerFresh >= 3 && upperFresh < 3) {
       why.push('Upper body was trained recently and is still recovering.');
       why.push(`Estimated recovery: ${fresh.join(', ')} are ready for work.`);
       why.push(batteryText);
-      return { type: 'strength', title: 'Strength: lower body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min lower session with lighter weights.', muscleGroups: fresh.slice(0, 3) };
+      return { ruleId: 'fresh_lower_strength', type: 'strength', title: 'Strength: lower body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min lower session with lighter weights.', muscleGroups: fresh.slice(0, 3) };
     }
     const [lo, hi] = zoneRange(maxHr, 2);
     why.push(f.daysSinceStrength === 0 ? 'You already did strength training today.' : 'Strength training was yesterday.');
     why.push(`Cardio is at ${Math.round(f.cardioMinutesThisWeek)} of ${cardioTarget} weekly minutes.`);
     why.push(batteryText);
-    return { type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min of the same cardio at the lower end of the range, or a brisk walk.' };
+    return { ruleId: 'strength_yesterday_cardio', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min of the same cardio at the lower end of the range, or a brisk walk.' };
   }
 
   // Rule 4: cardio behind weekly target → prefer cardio over strength
@@ -247,7 +248,7 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
       why.push(`It's been ${f.daysSinceStrength} days since your last strength session. Freshest estimated groups: ${muscles.join(', ')}.`);
       why.push(batteryText);
       why.push(`Strength is at ${f.strengthThisWeek} of ${strengthTarget} sessions this week.`);
-      return { type: 'strength', title: 'Strength: full-body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles.length ? muscles : undefined };
+      return { ruleId: 'strength_due', type: 'strength', title: 'Strength: full-body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles.length ? muscles : undefined };
     }
   }
 
@@ -257,7 +258,7 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
     why.push(`Cardio is at ${Math.round(f.cardioMinutesThisWeek)} of ${cardioTarget} weekly minutes — behind target.`);
     why.push(f.daysSinceCardio === null ? 'No cardio recorded recently.' : `Last cardio: ${f.daysSinceCardio} day${f.daysSinceCardio === 1 ? '' : 's'} ago.`);
     why.push(batteryText);
-    return { type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min easy walk or gentle cycling.' };
+    return { ruleId: 'cardio_behind_target', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min easy walk or gentle cycling.' };
   }
 
   // Rule 5: alternate strength / cardio
@@ -266,12 +267,12 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
     why.push(`Strength is at ${f.strengthThisWeek} of ${strengthTarget} sessions this week.`);
     why.push(batteryText);
     why.push('Alternating with cardio keeps muscle stimulus high while burning calories.');
-    return { type: 'strength', title: 'Strength: full-body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles.length ? muscles : undefined };
+    return { ruleId: 'alternate', type: 'strength', title: 'Strength: full-body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles.length ? muscles : undefined };
   }
   const [lo, hi] = zoneRange(maxHr, 2);
   why.push('Strength target met this week — rounding out with easy cardio.');
   why.push(batteryText);
-  return { type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min easy walk.' };
+  return { ruleId: 'alternate', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min easy walk.' };
 }
 
 // ---- Strength volume & progressive overload ----
