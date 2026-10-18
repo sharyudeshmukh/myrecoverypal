@@ -209,8 +209,26 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
     return { type: 'recovery', title: 'Recovery: easy walk + mobility', duration: '30–45 min walk + 10 min mobility', intensity: 'Zone 1 · under ' + Math.round(maxHr * 0.6) + ' bpm', why, lowEnergy: '10 min of gentle stretching or a slow 15 min walk.' };
   }
 
-  // Rule 2: strength yesterday or today
+  // Rule 2: strength yesterday or today — train the muscle groups that are
+  // estimated fresh (e.g. upper body after leg day), else fall back to cardio.
   if (f.daysSinceStrength !== null && f.daysSinceStrength <= 1) {
+    const recovery = computeGarminRecovery(activities, daily, now);
+    const fresh = recovery.cards.filter((c) => c.recovered >= 85).map((c) => c.muscle as MuscleGroup);
+    const upperSet = new Set<MuscleGroup>(['chest', 'back', 'shoulders', 'arms', 'core']);
+    const upperFresh = fresh.filter((m) => upperSet.has(m)).length;
+    const lowerFresh = fresh.length - upperFresh;
+    if (fresh.length >= 3 && upperFresh >= 3 && lowerFresh < 3) {
+      why.push(f.daysSinceStrength === 0 ? 'You already did strength training today — but these groups are fully recovered.' : 'Lower body was trained recently and is still recovering.');
+      why.push(`Estimated recovery: ${fresh.join(', ')} are ready for work.`);
+      why.push(batteryText);
+      return { type: 'strength', title: 'Strength: upper body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min upper session with lighter weights.', muscleGroups: fresh.slice(0, 3) };
+    }
+    if (fresh.length >= 3 && lowerFresh >= 3 && upperFresh < 3) {
+      why.push('Upper body was trained recently and is still recovering.');
+      why.push(`Estimated recovery: ${fresh.join(', ')} are ready for work.`);
+      why.push(batteryText);
+      return { type: 'strength', title: 'Strength: lower body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min lower session with lighter weights.', muscleGroups: fresh.slice(0, 3) };
+    }
     const [lo, hi] = zoneRange(maxHr, 2);
     why.push(f.daysSinceStrength === 0 ? 'You already did strength training today.' : 'Strength training was yesterday.');
     why.push(`Cardio is at ${Math.round(f.cardioMinutesThisWeek)} of ${cardioTarget} weekly minutes.`);
@@ -323,6 +341,42 @@ export function goalInsights(daily: Daily[], activities: Workout[], weightLog: W
     text: `${r.length} workouts in the last 7 days, ${r.length === p.length ? 'unchanged from' : r.length > p.length ? 'up from' : 'down from'} ${p.length} the previous week. Goal: steady sessions you can repeat.`,
     tone: trend(r.length, p.length),
   });
+
+  // Personal bests in the last 4 weeks
+  const winStart = shiftDate(today, -27);
+  const runs = activities.filter((a) => dayOf(a) !== null && ['running', 'treadmill_running'].includes(workoutType(a.type)) && (a.distance_meters ?? 0) > 0);
+  const bestIn = (list: Workout[]) => list.reduce((m, a) => Math.max(m, a.distance_meters ?? 0), 0);
+  const bestRunNow = bestIn(runs.filter((a) => (dayOf(a) as string) >= winStart));
+  const bestRunBefore = bestIn(runs.filter((a) => (dayOf(a) as string) < winStart));
+  if (bestRunNow > 0 && bestRunNow > bestRunBefore) {
+    insights.push({
+      title: 'Personal best: run',
+      text: `Longest run so far: ${(bestRunNow / 1000).toFixed(2)} km${bestRunBefore > 0 ? ` — up from ${(bestRunBefore / 1000).toFixed(2)} km` : ''}.`,
+      tone: 'up',
+    });
+  }
+  const dateByActivity = new Map(activities.map((a) => [a.activity_id, dayOf(a)]));
+  const weightByExercise = new Map<string, { date: string; weight: number }[]>();
+  for (const s of strengthSets) {
+    const date = dateByActivity.get(s.activity_id);
+    if (!date || s.weight == null || s.weight <= 0) continue;
+    const list = weightByExercise.get(s.exercise) ?? [];
+    list.push({ date, weight: s.weight });
+    weightByExercise.set(s.exercise, list);
+  }
+  let liftPr: { exercise: string; now: number; before: number } | null = null;
+  for (const [exercise, entries] of weightByExercise) {
+    const now = entries.filter((e) => e.date >= winStart && e.date <= today).reduce((m, e) => Math.max(m, e.weight), 0);
+    const before = entries.filter((e) => e.date < winStart).reduce((m, e) => Math.max(m, e.weight), 0);
+    if (now > before && before > 0 && now - before > (liftPr ? liftPr.now - liftPr.before : 0)) liftPr = { exercise, now, before };
+  }
+  if (liftPr) {
+    insights.push({
+      title: 'Personal best: lift',
+      text: `Heaviest ${liftPr.exercise} so far: ${liftPr.now} (up from ${liftPr.before}).`,
+      tone: 'up',
+    });
+  }
   insights.push(cmp('Cardio volume', cardioMin(r), cardioMin(p), ' min', 'Cardio minutes'));
   insights.push(cmp('Active calories', activeKcal(r), activeKcal(p), ' kcal', 'Active calories burned'));
   insights.push(cmp('Daily movement', average(recentDays.map((d) => d.steps)), average(prevDays.map((d) => d.steps)), ' steps', 'Average steps'));
@@ -370,7 +424,7 @@ export function goalInsights(daily: Daily[], activities: Workout[], weightLog: W
         ? `Training targets are met — keep the rhythm and watch the weight trend toward ${target} ${units}.`
         : 'Targets are met and trends look steady. Keep showing up and log your weight weekly.';
 
-  return { insights: insights.slice(0, 7), recommendation };
+  return { insights: insights.slice(0, 9), recommendation };
 }
 
 // ---- Goal-fit note for a workout detail page ----

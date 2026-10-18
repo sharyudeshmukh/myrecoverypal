@@ -1,10 +1,11 @@
-import { Link } from '@tanstack/react-router';
 import { Activity, ArrowRight, Battery, BedDouble, Flame, Footprints, Heart, LogOut, Moon, RefreshCw, Sparkles, Waves, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppLink } from '@/components/app-link';
 import { supabase } from '@/integrations/supabase/client';
+import { useDemoMode } from '@/lib/demo-context';
 import { Sparkline } from '@/components/sparkline';
 import { OVERNIGHT, average, shiftDate, type Daily, type Workout } from '@/lib/fitness-dashboard';
-import { DEFAULT_GOALS, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet } from '@/lib/goals';
+import { DEFAULT_GOALS, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet, type WeightEntry } from '@/lib/goals';
 import { useEffect, useState, type ReactNode } from 'react';
 import { computeGarminRecovery } from '@/lib/garmin-recovery';
 
@@ -26,16 +27,17 @@ function Tile({ icon: Icon, label, value, detail, avgLabel, spark, children }: {
   );
 }
 
-export function TodayPage({ daily, activities, goals, strengthSets, refresh, busy }: { daily: Daily[]; activities: Workout[]; goals: Goals | null; strengthSets: StrengthSet[]; refresh: () => void; busy: boolean }) {
+export function TodayPage({ daily, activities, goals, strengthSets, weightLog = [], refresh, busy }: { daily: Daily[]; activities: Workout[]; goals: Goals | null; strengthSets: StrengthSet[]; weightLog?: WeightEntry[]; refresh: () => void; busy: boolean }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
+  const demo = useDemoMode();
   const today = new Date(now).toLocaleDateString('en-CA');
   const recovery = computeGarminRecovery(activities, daily, now);
   const sorted = daily.filter((d) => d.date <= today).sort((a, b) => b.date.localeCompare(a.date));
   const current = sorted.find((d) => d.date === today);
   const week7 = sorted.filter((d) => d.date >= shiftDate(today, -6));
   const next = nextWorkout(daily, activities, goals, strengthSets, today, now);
-  const insights = goalInsights(daily, activities, [], strengthSets, goals, today);
+  const insights = goalInsights(daily, activities, weightLog, strengthSets, goals, today);
   const stepsGoal = goals?.steps_goal ?? DEFAULT_GOALS.steps_goal;
   const units = goals?.units ?? 'kg';
 
@@ -63,21 +65,25 @@ export function TodayPage({ daily, activities, goals, strengthSets, refresh, bus
     <div>
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-5">
-          <Link to="/today" className="flex items-center gap-2 font-display text-base font-bold">
+          <AppLink to="/today" className="flex items-center gap-2 font-display text-base font-bold">
             <Activity className="size-6 text-primary" />NextRep<span className="hidden text-xs font-normal text-muted-foreground sm:inline">/ {DEFAULT_GOALS.goal.toUpperCase()}</span>
-          </Link>
+          </AppLink>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" title="Refresh Garmin readings" aria-label="Refresh Garmin readings" disabled={busy} onClick={refresh}>
-              <RefreshCw className={busy ? 'animate-spin' : ''} />
-            </Button>
-            <Button title="Sign out" aria-label="Sign out" variant="ghost" size="icon" onClick={async () => { await supabase.auth.signOut(); }}>
-              <LogOut />
-            </Button>
+            {!demo && (
+              <>
+                <Button variant="outline" size="icon" title="Refresh Garmin readings" aria-label="Refresh Garmin readings" disabled={busy} onClick={refresh}>
+                  <RefreshCw className={busy ? 'animate-spin' : ''} />
+                </Button>
+                <Button title="Sign out" aria-label="Sign out" variant="ghost" size="icon" onClick={async () => { await supabase.auth.signOut(); }}>
+                  <LogOut />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
       <main className="mx-auto max-w-5xl space-y-10 px-5 py-8">
-        <section>
+        <section data-tour="next-workout">
           <p className="mb-2 text-xs font-medium uppercase text-primary">Tomorrow / next workout</p>
           <div className="rounded-xl border border-primary/40 bg-card p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -86,7 +92,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, refresh, bus
                 <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{next.title}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{next.duration} · {next.intensity}</p>
               </div>
-              <Link to="/workout-log" className="flex items-center gap-1 text-sm text-primary">Recovery<ArrowRight className="size-4" /></Link>
+              <AppLink to="/workout-log" className="flex items-center gap-1 text-sm text-primary">Recovery<ArrowRight className="size-4" /></AppLink>
             </div>
             {next.muscleGroups?.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
@@ -95,7 +101,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, refresh, bus
                 ))}
               </div>
             ) : null}
-            <Link to="/workout-log" className="mt-4 block text-sm text-primary">{recovery.summary}</Link>
+            <AppLink to="/workout-log" className="mt-4 block text-sm text-primary">{recovery.summary}</AppLink>
             <ul className="mt-5 space-y-2 border-t pt-4">
               {next.why.map((w, i) => (
                 <li key={i} className="flex gap-2 text-sm text-muted-foreground"><Zap className="mt-0.5 size-3.5 shrink-0 text-primary" />{w}</li>

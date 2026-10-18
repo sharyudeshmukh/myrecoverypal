@@ -58,6 +58,21 @@ describe('nextWorkout rules', () => {
     expect(next.type).toBe('cardio');
     expect(next.intensity).toContain('114–133');
   });
+  it('recommends upper-body strength the day after a lower-body session', () => {
+    const yesterday = workout({
+      activity_id: 1, date: '2026-10-17', type: 'strength_training',
+      raw: { summarizedExerciseSets: [
+        { category: 'SQUAT', sets: 3, reps: 6 },
+        { category: 'DEADLIFT', sets: 3, reps: 6 },
+        { category: 'LUNGE', sets: 3, reps: 10 },
+      ] },
+    });
+    const d = daily({ date: TODAY, sleep_seconds: 26640, raw: { stats: { bodyBatteryMostRecentValue: 78 } } });
+    const next = nextWorkout([d], [yesterday], goals, [], TODAY);
+    expect(next.type).toBe('strength');
+    expect(next.title).toContain('upper');
+    expect(next.muscleGroups?.length).toBeGreaterThan(0);
+  });
   it('strength when 2+ days since strength, battery is 40+, and cardio is on track', () => {
     const d = daily({ date: TODAY, raw: { stats: { bodyBatteryMostRecentValue: 70 } } });
     const acts = [workout({ activity_id: 1, date: '2026-10-15', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-16', type: 'running', duration_seconds: 9000 })];
@@ -114,6 +129,17 @@ describe('insights feed', () => {
   it('recommends cardio when behind weekly target', () => {
     const { recommendation } = goalInsights([], [], [], [], goals, TODAY);
     expect(recommendation).toContain('cardio minutes short');
+  });
+  it('surfaces a longest-run personal best in the last 4 weeks', () => {
+    const acts = [workout({ activity_id: 1, date: '2026-09-01', type: 'running', distance_meters: 4200 }), workout({ activity_id: 2, date: '2026-10-10', type: 'running', distance_meters: 5000 })];
+    const { insights } = goalInsights([], acts, [], [], goals, TODAY);
+    expect(insights.some((i) => i.title.startsWith('Personal best') && i.text.includes('5.00 km'))).toBe(true);
+  });
+  it('surfaces a heaviest-lift personal best', () => {
+    const acts = [workout({ activity_id: 1, date: '2026-09-01', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-16', type: 'strength_training' })];
+    const sets = [strengthSet(1, 'Squat', 'quads', 5, 120), strengthSet(2, 'Squat', 'quads', 5, 130)];
+    const { insights } = goalInsights([], acts, [], sets, goals, TODAY);
+    expect(insights.some((i) => i.title.startsWith('Personal best') && i.text.includes('Squat'))).toBe(true);
   });
 });
 

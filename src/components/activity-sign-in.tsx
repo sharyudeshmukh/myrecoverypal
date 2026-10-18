@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,10 @@ export function ActivitySignIn() {
   }
   return <div className="space-y-3">
     <h3 className="font-semibold">Sign in to your Garmin history</h3>
+    <div className="space-y-1">
+      <Link to="/demo" className="flex h-9 w-full items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">▶ Explore the live demo</Link>
+      <p className="text-center text-xs text-muted-foreground">No sign-up · sample data</p>
+    </div>
     <Button variant="outline" className="w-full" disabled={busy} onClick={() => social("google")}>Continue with Google</Button>
     <Button className="lovable-auth-button w-full" disabled={busy} onClick={() => social("lovable")}>Continue with Lovable</Button>
     <form onSubmit={submit} className="space-y-3">

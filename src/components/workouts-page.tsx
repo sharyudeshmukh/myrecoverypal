@@ -1,7 +1,7 @@
-import { Link } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import { Activity, Dumbbell, Flame, Footprints, ChevronRight, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppLink } from '@/components/app-link';
 import { LABELS, TYPES, consistencyStreak, shiftDate, weekStart, workoutType, type Workout, type WorkoutType } from '@/lib/fitness-dashboard';
 import { DEFAULT_GOALS, type Goals, type StrengthSet } from '@/lib/goals';
 
@@ -64,7 +64,7 @@ export function WorkoutsPage({ activities, goals, strengthSets }: { activities: 
               const Icon = TYPE_ICONS[t];
               return (
                 <li key={a.activity_id}>
-                  <Link to="/workouts/$id" params={{ id: String(a.activity_id) }} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-accent/40">
+                  <AppLink to="/workouts/$id" params={{ id: String(a.activity_id) }} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-accent/40">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/40 text-primary"><Icon className="size-5" /></span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{a.name ?? LABELS[t]}</span>
@@ -78,7 +78,7 @@ export function WorkoutsPage({ activities, goals, strengthSets }: { activities: 
                       <span className="block text-xs text-muted-foreground">{a.calories === null ? '—' : `${Math.round(a.calories)} kcal`} · {a.avg_hr === null ? '—' : `${Math.round(a.avg_hr)} bpm`}</span>
                     </span>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                  </Link>
+                  </AppLink>
                 </li>
               );
             })}

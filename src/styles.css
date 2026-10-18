@@ -86,3 +86,5 @@
 
 .app-bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); box-shadow: var(--nav-shadow); }
 body:has(.app-bottom-nav) { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+.demo-tour-target { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 0.75rem; transition: outline 0.25s ease; }
