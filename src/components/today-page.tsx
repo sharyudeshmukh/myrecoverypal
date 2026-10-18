@@ -5,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Sparkline } from '@/components/sparkline';
 import { OVERNIGHT, average, shiftDate, type Daily, type Workout } from '@/lib/fitness-dashboard';
 import { DEFAULT_GOALS, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet } from '@/lib/goals';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { computeGarminRecovery } from '@/lib/garmin-recovery';
 
 const dateLabel = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 const fmt = (v: number | null | undefined, unit = '', digits = 0) => (v === null || v === undefined || !Number.isFinite(v) ? '—' : `${v.toLocaleString(undefined, { maximumFractionDigits: digits })}${unit}`);
@@ -26,7 +27,10 @@ function Tile({ icon: Icon, label, value, detail, avgLabel, spark, children }: {
 }
 
 export function TodayPage({ daily, activities, goals, strengthSets, refresh, busy }: { daily: Daily[]; activities: Workout[]; goals: Goals | null; strengthSets: StrengthSet[]; refresh: () => void; busy: boolean }) {
-  const today = new Date().toLocaleDateString('en-CA');
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
+  const today = new Date(now).toLocaleDateString('en-CA');
+  const recovery = computeGarminRecovery(activities, daily, now);
   const sorted = daily.filter((d) => d.date <= today).sort((a, b) => b.date.localeCompare(a.date));
   const current = sorted.find((d) => d.date === today);
   const week7 = sorted.filter((d) => d.date >= shiftDate(today, -6));
@@ -82,15 +86,16 @@ export function TodayPage({ daily, activities, goals, strengthSets, refresh, bus
                 <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{next.title}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{next.duration} · {next.intensity}</p>
               </div>
-              <Link to="/workout-log" className="flex items-center gap-1 text-sm text-primary">Log it<ArrowRight className="size-4" /></Link>
+              <Link to="/workout-log" className="flex items-center gap-1 text-sm text-primary">Recovery<ArrowRight className="size-4" /></Link>
             </div>
             {next.muscleGroups?.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
-                {next.muscleGroups.map((m) => (
+                {recovery.freshest.map((m) => (
                   <span key={m} className="rounded-full border border-primary/40 px-3 py-1 text-xs capitalize text-primary">{m}</span>
                 ))}
               </div>
             ) : null}
+            <Link to="/workout-log" className="mt-4 block text-sm text-primary">{recovery.summary}</Link>
             <ul className="mt-5 space-y-2 border-t pt-4">
               {next.why.map((w, i) => (
                 <li key={i} className="flex gap-2 text-sm text-muted-foreground"><Zap className="mt-0.5 size-3.5 shrink-0 text-primary" />{w}</li>
