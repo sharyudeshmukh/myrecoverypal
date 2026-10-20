@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Activity, Dumbbell, Flame, Footprints, ChevronRight, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLink } from '@/components/app-link';
-import { LABELS, TYPES, consistencyStreak, shiftDate, weekStart, workoutType, type Workout, type WorkoutType } from '@/lib/fitness-dashboard';
+import { LABELS, TYPES, consistencyStreak, isCardioType, shiftDate, weekStart, workoutType, type Workout, type WorkoutType } from '@/lib/fitness-dashboard';
 import { DEFAULT_GOALS, type Goals, type StrengthSet } from '@/lib/goals';
 
 const dateLabel = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

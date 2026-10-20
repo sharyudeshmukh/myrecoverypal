@@ -1,6 +1,6 @@
 import type { Tables } from '@/integrations/supabase/types';
 import type { Daily, Workout } from '@/lib/fitness-dashboard';
-import { shiftDate, weekStart, workoutType, average } from '@/lib/fitness-dashboard';
+import { isCardioType, shiftDate, weekStart, workoutType, average } from '@/lib/fitness-dashboard';
 import { computeGarminRecovery } from '@/lib/garmin-recovery';
 
 export type Goals = Tables<'user_goals'>;

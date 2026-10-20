@@ -4,7 +4,7 @@ import { AppLink } from '@/components/app-link';
 import { supabase } from '@/integrations/supabase/client';
 import { useDemoMode } from '@/lib/demo-context';
 import { Sparkline } from '@/components/sparkline';
-import { OVERNIGHT, average, shiftDate, type Daily, type Workout } from '@/lib/fitness-dashboard';
+import { OVERNIGHT, average, pacificToday, shiftDate, type Daily, type Workout } from '@/lib/fitness-dashboard';
 import { DEFAULT_GOALS, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet, type WeightEntry, type NextWorkout } from '@/lib/goals';
 import { useEffect, useState, type ReactNode } from 'react';
 import { computeGarminRecovery } from '@/lib/garmin-recovery';
