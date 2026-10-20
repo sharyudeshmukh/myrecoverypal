@@ -1,3 +1,4 @@
+import { pacificToday } from '@/lib/fitness-dashboard';
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { captureRecommendations } from './evaluation.server';
@@ -15,7 +16,7 @@ export const fetchFitnessDashboard = createServerFn({ method: 'GET' }).middlewar
   if (recoveryActivities.error) throw new Error('Recovery workouts could not be loaded. Please try again.');
   const rawById = new Map(recoveryActivities.data.map(a => [a.activity_id, a.raw]));
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-  const today = new Date().toISOString().slice(0,10);
+  const today = pacificToday();
   const evaluation = await captureRecommendations(context.supabase, supabaseAdmin, context.userId, today, false);
   return {
     recommendation: evaluation.logs.find(r => r.for_date === today && r.source === 'live')?.recommendation ?? null,

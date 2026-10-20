@@ -1,3 +1,4 @@
+import { pacificToday } from '@/lib/fitness-dashboard';
 import { createFileRoute } from '@tanstack/react-router';
 import { matchesIngestToken } from '@/lib/garmin-ingest';
 export const Route = createFileRoute('/api/public/evaluate-garmin')({ server: { handlers: {
@@ -7,7 +8,7 @@ export const Route = createFileRoute('/api/public/evaluate-garmin')({ server: { 
     let body: unknown;
     try { body = await request.json(); } catch { return Response.json({error:'Invalid JSON'}, {status:400}); }
     const date = typeof body === 'object' && body !== null && 'for_date' in body ? body.for_date : null;
-    const today = new Date().toISOString().slice(0,10);
+    const today = pacificToday();
     if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || Math.abs(Date.parse(date)-Date.parse(today)) > 86400000) return Response.json({error:'Current Garmin calendar date required'}, {status:400});
     try {
       const { supabaseAdmin } = await import('@/integrations/supabase/client.server');

@@ -31,7 +31,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
   const demo = useDemoMode();
-  const today = new Date(now).toLocaleDateString('en-CA');
+  const today = pacificToday(now);
   const recovery = computeGarminRecovery(activities, daily, now);
   const sorted = daily.filter((d) => d.date <= today).sort((a, b) => b.date.localeCompare(a.date));
   const current = sorted.find((d) => d.date === today);

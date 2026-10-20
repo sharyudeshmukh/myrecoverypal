@@ -15,7 +15,7 @@ export function WorkoutsPage({ activities, goals, strengthSets }: { activities: 
   const week = weekStart(today);
   const thisWeek = activities.filter((a) => a.start_time_local && a.start_time_local.slice(0, 10) >= week && a.start_time_local.slice(0, 10) <= today);
   const strengthCount = thisWeek.filter((a) => workoutType(a.type) === 'strength_training').length;
-  const cardioMinutes = Math.round(thisWeek.filter((a) => ['running', 'treadmill_running', 'indoor_cardio'].includes(workoutType(a.type))).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0));
+  const cardioMinutes = Math.round(thisWeek.filter((a) => isCardioType(a.type)).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0));
   const activeKcal = Math.round(thisWeek.reduce((s, a) => s + (a.calories ?? 0), 0));
   const streak = consistencyStreak(activities, today);
   const strengthTarget = goals?.strength_target ?? DEFAULT_GOALS.strength_target;

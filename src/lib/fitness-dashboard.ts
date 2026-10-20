@@ -12,6 +12,13 @@ export function average(values: (number|null)[]) { const present = values.filter
 export function normalizeDay(day: Daily): Daily { return {...day,stress_avg: day.stress_avg !== null && day.stress_avg < 0 ? null : day.stress_avg,resting_hr: day.sleep_seconds === null ? null : day.resting_hr}; }
 export function suggestion(day?: Daily): 'Push'|'Steady'|'Recover' { if ((day?.body_battery_high !== null && day?.body_battery_high !== undefined && day.body_battery_high < 40) || (day?.sleep_seconds !== null && day?.sleep_seconds !== undefined && day.sleep_seconds < 21600)) return 'Recover'; if ((day?.body_battery_wake ?? -1) >=75 && (day?.sleep_seconds ?? -1)>=25200) return 'Push'; return 'Steady'; }
 export function workoutType(type: string|null): WorkoutType {const t=(type??'').toLowerCase().replace(/[ -]/g,'_'); if(t==='cardio') return 'indoor_cardio'; return TYPES.find(x=>x===t) ?? 'other';}
+export const APP_TIME_ZONE = 'America/Los_Angeles';
+/** Calendar date (YYYY-MM-DD) in the user's Pacific time zone. */
+export function pacificToday(now = Date.now()) { return new Date(now).toLocaleDateString('en-CA', { timeZone: APP_TIME_ZONE }); }
+export function pacificHour(now = Date.now()) { return Number(new Date(now).toLocaleString('en-US', { timeZone: APP_TIME_ZONE, hour: 'numeric', hourCycle: 'h23' })); }
+const CARDIO_RE = /run|cycl|bik|spin|swim|walk|hik|row|elliptical|stair|cardio|ski|skat|paddl|kayak|dance|hiit|jump/;
+/** Any aerobic Garmin activity (running, cycling, swimming, walking, rowing, elliptical, …) counts as cardio. */
+export function isCardioType(type: string|null) { const t=(type??'').toLowerCase(); return !t.includes('strength') && CARDIO_RE.test(t); }
 export function weeklyWorkouts(activities: Workout[], today: string, days: number) {
  const first=weekStart(shiftDate(today,1-days)), last=weekStart(today);
  const rows: {date:string;count:number;minutes:number;runningKm:number|null;strength_training:number;treadmill_running:number;indoor_cardio:number;running:number;other:number;strength_trainingMinutes:number;treadmill_runningMinutes:number;indoor_cardioMinutes:number;runningMinutes:number;otherMinutes:number}[]=[];
