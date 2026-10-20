@@ -1,5 +1,5 @@
 import type { Json } from '@/integrations/supabase/types';
-import { shiftDate, weekStart, workoutType, type Daily, type Workout } from './fitness-dashboard';
+import { isCardioType, shiftDate, weekStart, workoutType, type Daily, type Workout } from './fitness-dashboard';
 import { nextWorkout, trainingFacts, effectiveMaxHr, DEFAULT_GOALS, timeInZones, type Goals, type StrengthSet, type NextWorkout } from './goals';
 import { computeGarminRecovery } from './garmin-recovery';
 
@@ -15,8 +15,7 @@ export type EvaluatedLog = RecommendationLog & {
   strengthMet: boolean | null; cardioMet: boolean | null;
 };
 const dayOf = (a: Workout) => a.start_time_local?.slice(0, 10) ?? '';
-const cardioTypes = ['running', 'treadmill_running', 'indoor_cardio'];
-const isCardio = (a: Workout) => cardioTypes.includes(workoutType(a.type));
+const isCardio = (a: Workout) => isCardioType(a.type);
 
 // All callers share the current engine; replay explicitly excludes target-day data.
 export function freezeRecommendation(daily: Daily[], activities: Workout[], goals: Goals | null, sets: StrengthSet[], forDate: string, userId: string, source: RecommendationLog['source'], generatedAt = new Date().toISOString()): RecommendationLog {

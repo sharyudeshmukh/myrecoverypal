@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Activity, Dumbbell, Flame, Footprints, ChevronRight, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLink } from '@/components/app-link';
-import { LABELS, TYPES, consistencyStreak, shiftDate, weekStart, workoutType, type Workout, type WorkoutType } from '@/lib/fitness-dashboard';
+import { LABELS, TYPES, consistencyStreak, isCardioType, shiftDate, weekStart, workoutType, type Workout, type WorkoutType } from '@/lib/fitness-dashboard';
 import { DEFAULT_GOALS, type Goals, type StrengthSet } from '@/lib/goals';
 
 const dateLabel = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -15,7 +15,7 @@ export function WorkoutsPage({ activities, goals, strengthSets }: { activities: 
   const week = weekStart(today);
   const thisWeek = activities.filter((a) => a.start_time_local && a.start_time_local.slice(0, 10) >= week && a.start_time_local.slice(0, 10) <= today);
   const strengthCount = thisWeek.filter((a) => workoutType(a.type) === 'strength_training').length;
-  const cardioMinutes = Math.round(thisWeek.filter((a) => ['running', 'treadmill_running', 'indoor_cardio'].includes(workoutType(a.type))).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0));
+  const cardioMinutes = Math.round(thisWeek.filter((a) => isCardioType(a.type)).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0));
   const activeKcal = Math.round(thisWeek.reduce((s, a) => s + (a.calories ?? 0), 0));
   const streak = consistencyStreak(activities, today);
   const strengthTarget = goals?.strength_target ?? DEFAULT_GOALS.strength_target;

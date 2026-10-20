@@ -1,6 +1,6 @@
 import type { Tables } from '@/integrations/supabase/types';
 import type { Daily, Workout } from '@/lib/fitness-dashboard';
-import { shiftDate, weekStart, workoutType, average } from '@/lib/fitness-dashboard';
+import { isCardioType, shiftDate, weekStart, workoutType, average } from '@/lib/fitness-dashboard';
 import { computeGarminRecovery } from '@/lib/garmin-recovery';
 
 export type Goals = Tables<'user_goals'>;
@@ -138,7 +138,7 @@ export function trainingFacts(daily: Daily[], activities: Workout[], today: stri
   const dayOf = (a: Workout) => a.start_time_local?.slice(0, 10) ?? null;
   const past = activities.filter((a) => dayOf(a) !== null && (dayOf(a) as string) <= today);
   const strengthDays = [...new Set(past.filter((a) => workoutType(a.type) === 'strength_training').map((a) => dayOf(a) as string))].sort();
-  const cardioDays = [...new Set(past.filter((a) => ['running', 'treadmill_running', 'indoor_cardio'].includes(workoutType(a.type))).map((a) => dayOf(a) as string))].sort();
+  const cardioDays = [...new Set(past.filter((a) => isCardioType(a.type)).map((a) => dayOf(a) as string))].sort();
   const daysAgo = (date: string) => Math.round((new Date(`${today}T12:00:00Z`).getTime() - new Date(`${date}T12:00:00Z`).getTime()) / 864e5);
   const lastStrengthDate = strengthDays.at(-1) ?? null;
   const lastCardioDate = cardioDays.at(-1) ?? null;
@@ -159,7 +159,7 @@ export function trainingFacts(daily: Daily[], activities: Workout[], today: stri
     daysSinceCardio: lastCardioDate ? daysAgo(lastCardioDate) : null,
     consecutiveDays,
     strengthThisWeek: thisWeek.filter((a) => workoutType(a.type) === 'strength_training').length,
-    cardioMinutesThisWeek: thisWeek.filter((a) => ['running', 'treadmill_running', 'indoor_cardio'].includes(workoutType(a.type))).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0),
+    cardioMinutesThisWeek: thisWeek.filter((a) => isCardioType(a.type)).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0),
     battery: latestBattery(daily, today),
     stressToday: todayRow?.stress_avg != null && todayRow.stress_avg >= 0 ? todayRow.stress_avg : null,
     sleepLastNight: todayRow?.sleep_seconds ?? null,
@@ -323,7 +323,7 @@ export function goalInsights(daily: Daily[], activities: Workout[], weightLog: W
   const inRange = (from: string, to: string) => activities.filter((a) => dayOf(a) !== null && (dayOf(a) as string) >= from && (dayOf(a) as string) <= to);
   const r = inRange(recentStart, today);
   const p = inRange(prevStart, shiftDate(today, -7));
-  const cardioMin = (list: Workout[]) => list.filter((a) => ['running', 'treadmill_running', 'indoor_cardio'].includes(workoutType(a.type))).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0);
+  const cardioMin = (list: Workout[]) => list.filter((a) => isCardioType(a.type)).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0);
   const activeKcal = (list: Workout[]) => list.reduce((s, a) => s + (a.calories ?? 0), 0);
   const recentDays = daily.filter((d) => d.date >= recentStart && d.date <= today);
   const prevDays = daily.filter((d) => d.date >= prevStart && d.date < recentStart);

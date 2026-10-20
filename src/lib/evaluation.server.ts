@@ -1,3 +1,4 @@
+import { pacificHour } from './fitness-dashboard';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/integrations/supabase/types';
 import type { RecommendationLog } from './evaluation';
@@ -24,7 +25,10 @@ export async function captureRecommendations(reader: SupabaseClient<Database>, w
   const dates = new Set(existing.data.map(r=>r.for_date));
   const missing = replay ? data.daily.filter(d=>d.date < today && !dates.has(d.date)) : [];
   const snapshots = missing.map(r=>freezeRecommendation(data.daily,data.activities,data.goals,data.sets,r.date,userId,'replay'));
-  if (!dates.has(today)) snapshots.push(freezeRecommendation(data.daily, data.activities, data.goals, data.sets, today, userId, 'live'));
+  // Freeze today's advice only after the morning sync (overnight sleep present) or late morning Pacific, never the night before.
+  const todayRow = data.daily.find(d => d.date === today);
+  const morningReady = todayRow?.sleep_seconds != null || pacificHour() >= 11;
+  if (!dates.has(today) && morningReady) snapshots.push(freezeRecommendation(data.daily, data.activities, data.goals, data.sets, today, userId, 'live'));
   // INSERT ... ON CONFLICT DO NOTHING is atomic, including concurrent sync/page loads.
   for (let i = 0; i < snapshots.length; i += 10) {
     const rows = snapshots.slice(i,i+10).map(r => ({ ...r, recommendation: JSON.parse(JSON.stringify(r.recommendation)) as Json }));

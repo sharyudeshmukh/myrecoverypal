@@ -152,3 +152,21 @@ describe('exercise mapping', () => {
     expect(exerciseOptions('curl').map((o) => o.exercise)).toContain('Bicep curl');
   });
 });
+
+describe('cardio counting and Pacific day', () => {
+  it('counts cycling, swimming and walking as cardio but not strength', async () => {
+    const { isCardioType } = await import('@/lib/fitness-dashboard');
+    expect(isCardioType('indoor_cycling')).toBe(true);
+    expect(isCardioType('lap_swimming')).toBe(true);
+    expect(isCardioType('walking')).toBe(true);
+    expect(isCardioType('strength_training')).toBe(false);
+  });
+  it('a 150-min bike week means cardio is on target', () => {
+    const acts = [workout({ activity_id: 9, date: '2026-10-13', type: 'indoor_cycling', duration_seconds: 9000 })];
+    expect(nextWorkout([], acts, goals, [], '2026-10-14').ruleId).not.toBe('cardio_behind_target');
+  });
+  it('uses the Seattle calendar day, not UTC', async () => {
+    const { pacificToday } = await import('@/lib/fitness-dashboard');
+    expect(pacificToday(Date.parse('2026-10-20T04:05:00Z'))).toBe('2026-10-19');
+  });
+});
