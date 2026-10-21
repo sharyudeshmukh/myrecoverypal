@@ -1,4 +1,4 @@
-import { workoutType, type Workout, type Daily } from '@/lib/fitness-dashboard';
+import { workoutType, pacificToday, pacificTimestamp, type Workout, type Daily } from '@/lib/fitness-dashboard';
 
 export const RECOVERY_MUSCLES = ['chest', 'back', 'shoulders', 'arms', 'core', 'quads', 'hamstrings', 'glutes', 'calves'] as const;
 export type RecoveryMuscle = typeof RECOVERY_MUSCLES[number];
@@ -96,12 +96,12 @@ export function sessionMuscleLoads(activity: Workout): { muscle: RecoveryMuscle;
   return [...loads.entries()].map(([muscle, item]) => ({ muscle, ...item }));
 }
 export function computeGarminRecovery(activities: Workout[], daily: Daily[], now: number) {
-  const today = new Date(now).toLocaleDateString('en-CA');
+  const today = pacificToday(now);
   const battery = todayRecoveryBattery(daily, today);
   const cards: MuscleRecovery[] = RECOVERY_MUSCLES.map(muscle => ({ muscle, recovered: 100, fatigue: 0, status: 'Fresh', lastWorked: null, daysAgo: null, causes: [], estimated: false }));
   for (const activity of activities) {
     if (!activity.start_time_local) continue;
-    const timestamp = new Date(activity.start_time_local.replace(' ', 'T')).getTime();
+    const timestamp = pacificTimestamp(activity.start_time_local);
     const hours = (now - timestamp) / 36e5;
     if (!Number.isFinite(hours) || hours < 0 || hours > 7 * 24) continue;
     for (const load of sessionMuscleLoads(activity)) {
@@ -116,7 +116,7 @@ export function computeGarminRecovery(activities: Workout[], daily: Daily[], now
   for (const card of cards) {
     card.causes.sort((a, b) => b.date.localeCompare(a.date));
     card.lastWorked = card.causes[0]?.date ?? null;
-    card.daysAgo = card.lastWorked ? (now - new Date(card.lastWorked.replace(' ', 'T')).getTime()) / 864e5 : null;
+    card.daysAgo = card.lastWorked ? (now - pacificTimestamp(card.lastWorked)) / 864e5 : null;
     card.recovered = Math.round(100 - Math.min(100, card.fatigue));
     card.status = card.recovered >= 85 ? 'Fresh' : card.recovered >= 50 ? 'Recovering' : 'Fatigued';
   }
