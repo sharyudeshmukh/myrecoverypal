@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bootstrapDifference, classifyAdherence, evaluateLogs, freezeRecommendation, replayHistory, weekProgress, type RecommendationLog } from '@/lib/evaluation';
+import { bootstrapDifference, filterEvaluationVersions, classifyAdherence, evaluateLogs, freezeRecommendation, replayHistory, weekProgress, type RecommendationLog } from '@/lib/evaluation';
 import { generateDemoData } from '@/lib/demo-data';
 import type { Workout, Daily } from '@/lib/fitness-dashboard';
 
@@ -75,5 +75,17 @@ describe('isolated synthetic evaluation',()=>{
     const live=completed.filter(r=>r.source==='live'&&!r.uncertain);
     const c=bootstrapDifference(live.filter(r=>r.adherence==='followed').map(r=>r.battery).filter((v):v is number=>v!==null),live.filter(r=>r.adherence!=='followed').map(r=>r.battery).filter((v):v is number=>v!==null));
     expect(c.missing).toBe(0);expect(c.estimate).toBeGreaterThan(0);expect(c.low).toBeLessThan(0);expect(c.high).toBeGreaterThan(0);
+  });
+});
+describe('rules version isolation',()=>{
+  it('new frozen advice is v2 and version filtering does not modify old snapshots',()=>{
+    const old = {...rec(), rules_version:'v1' as const};
+    const before = JSON.stringify(old);
+    const current = rec();
+    expect(current.rules_version).toBe('v2');
+    expect(filterEvaluationVersions([old,current],'v1')).toEqual([old]);
+    expect(filterEvaluationVersions([old,current],'v2')).toEqual([current]);
+    expect(filterEvaluationVersions([old,current],'all')).toHaveLength(2);
+    expect(JSON.stringify(old)).toBe(before);
   });
 });
