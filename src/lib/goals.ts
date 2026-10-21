@@ -1,6 +1,6 @@
 import type { Tables } from '@/integrations/supabase/types';
 import type { Daily, Workout } from '@/lib/fitness-dashboard';
-import { isCardioType, shiftDate, weekStart, workoutType, average } from '@/lib/fitness-dashboard';
+import { isCardioType, cardioMinutes, pacificTimestamp, shiftDate, weekStart, workoutType, average } from '@/lib/fitness-dashboard';
 import { computeGarminRecovery } from '@/lib/garmin-recovery';
 
 export type Goals = Tables<'user_goals'>;
@@ -159,7 +159,7 @@ export function trainingFacts(daily: Daily[], activities: Workout[], today: stri
     daysSinceCardio: lastCardioDate ? daysAgo(lastCardioDate) : null,
     consecutiveDays,
     strengthThisWeek: thisWeek.filter((a) => workoutType(a.type) === 'strength_training').length,
-    cardioMinutesThisWeek: thisWeek.filter((a) => isCardioType(a.type)).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0),
+    cardioMinutesThisWeek: cardioMinutes(past, shiftDate(today, -6), today),
     battery: latestBattery(daily, today),
     stressToday: todayRow?.stress_avg != null && todayRow.stress_avg >= 0 ? todayRow.stress_avg : null,
     sleepLastNight: todayRow?.sleep_seconds ?? null,
@@ -177,6 +177,9 @@ export type NextWorkout = {
   why: string[];
   lowEnergy: string;
   muscleGroups?: MuscleGroup[] | undefined;
+  rulesVersion?: 'v1' | 'v2';
+  finisher?: string;
+  strengthBlockedReason?: string;
 };
 export function leastRecentlyTrained(strengthSets: StrengthSet[], activities: Workout[], today: string): MuscleGroup[] {
   const dateByActivity = new Map(activities.map((a) => [a.activity_id, a.start_time_local?.slice(0, 10) ?? null]));
@@ -190,89 +193,54 @@ export function leastRecentlyTrained(strengthSets: StrengthSet[], activities: Wo
   }
   return [...MUSCLE_GROUPS].sort((a, b) => (lastByMuscle.get(a) ?? '0').localeCompare(lastByMuscle.get(b) ?? '0')).slice(0, 3);
 }
-export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals | null, strengthSets: StrengthSet[], today: string, now = new Date(`${today}T12:00:00`).getTime()): NextWorkout {
+export type RecommendationHistory = { for_date: string; rec_type: NextWorkout['type'] };
+export function cardioLeadStreak(history: RecommendationHistory[], today: string) {
+  let count = 0;
+  for (let date = shiftDate(today, -1); history.some(r => r.for_date === date && r.rec_type === 'cardio'); date = shiftDate(date, -1)) count++;
+  return count;
+}
+export function cardioBudget(activities: Workout[], goals: Goals | null, today: string) {
+  const actual = cardioMinutes(activities, shiftDate(today, -6), today);
+  const target = goals?.cardio_minutes_target ?? DEFAULT_GOALS.cardio_minutes_target;
+  const daysElapsed = Math.round((Date.parse(`${today}T12:00:00Z`) - Date.parse(`${weekStart(today)}T12:00:00Z`)) / 864e5) + 1;
+  const pace = target * daysElapsed / 7;
+  const behind = actual < pace;
+  return { actual, target, daysElapsed, pace, behind, farBehind: actual < pace * .5,
+    label: `Weekly cardio (last 7 days): ${Math.round(actual)} of ${target} min, ${behind ? 'behind pace' : 'on pace'}` };
+}
+export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals | null, strengthSets: StrengthSet[], today: string, now = pacificTimestamp(`${today}T12:00:00`), history: RecommendationHistory[] = []): NextWorkout {
   const f = trainingFacts(daily, activities, today);
   const maxHr = effectiveMaxHr(goals, daily, today);
-  const stepsGoal = goals?.steps_goal ?? DEFAULT_GOALS.steps_goal;
-  const cardioTarget = goals?.cardio_minutes_target ?? DEFAULT_GOALS.cardio_minutes_target;
-  const strengthTarget = goals?.strength_target ?? DEFAULT_GOALS.strength_target;
-  const why: string[] = [];
+  const budget = cardioBudget(activities, goals, today);
   const battery = f.battery;
-
-  const sleepText = f.sleepLastNight != null ? `Last night's sleep: ${(f.sleepLastNight / 3600).toFixed(1)} h.` : 'No sleep data recorded last night.';
   const batteryText = battery != null ? `Latest Body Battery: ${Math.round(battery)}/100.` : 'No Body Battery reading available.';
-
-  // Rule 1: very low battery or 4+ consecutive training days
+  const sleepText = f.sleepLastNight != null ? `Last night's sleep: ${(f.sleepLastNight / 3600).toFixed(1)} h.` : 'No sleep data recorded last night.';
+  // Recovery overrides are unchanged.
   if ((battery != null && battery < 25) || f.consecutiveDays >= 4) {
-    why.push(battery != null && battery < 25 ? `Body Battery is ${Math.round(battery)}/100 — below the 25 recovery threshold.` : `You've trained ${f.consecutiveDays} days in a row.`);
-    why.push(sleepText);
-    why.push('Easy movement keeps fat-burning volume up while muscle repair catches up.');
-    return { ruleId: battery != null && battery < 25 ? 'low_bb_recovery' : 'consecutive_training_recovery', type: 'recovery', title: 'Recovery: easy walk + mobility', duration: '30–45 min walk + 10 min mobility', intensity: 'Zone 1 · under ' + Math.round(maxHr * 0.6) + ' bpm', why, lowEnergy: '10 min of gentle stretching or a slow 15 min walk.' };
+    return { rulesVersion: 'v2', ruleId: battery != null && battery < 25 ? 'low_bb_recovery' : 'consecutive_training_recovery', type: 'recovery', title: 'Recovery: easy walk + mobility', duration: '30–45 min walk + 10 min mobility', intensity: 'Zone 1 · under ' + Math.round(maxHr * .6) + ' bpm', why: [battery != null && battery < 25 ? `Body Battery is ${Math.round(battery)}/100 — below the 25 recovery threshold.` : `You've trained ${f.consecutiveDays} days in a row.`, sleepText, 'Easy movement keeps fat-burning volume up while muscle repair catches up.'], lowEnergy: '10 min of gentle stretching or a slow 15 min walk.' };
   }
-
-  // Rule 2: strength yesterday or today — train the muscle groups that are
-  // estimated fresh (e.g. upper body after leg day), else fall back to cardio.
-  if (f.daysSinceStrength !== null && f.daysSinceStrength <= 1) {
-    const recovery = computeGarminRecovery(activities, daily, now);
-    const fresh = recovery.cards.filter((c) => c.recovered >= 85).map((c) => c.muscle as MuscleGroup);
-    const upperSet = new Set<MuscleGroup>(['chest', 'back', 'shoulders', 'arms', 'core']);
-    const upperFresh = fresh.filter((m) => upperSet.has(m)).length;
-    const lowerFresh = fresh.length - upperFresh;
-    if (fresh.length >= 3 && upperFresh >= 3 && lowerFresh < 3) {
-      why.push(f.daysSinceStrength === 0 ? 'You already did strength training today — but these groups are fully recovered.' : 'Lower body was trained recently and is still recovering.');
-      why.push(`Estimated recovery: ${fresh.join(', ')} are ready for work.`);
-      why.push(batteryText);
-      return { ruleId: 'fresh_upper_strength', type: 'strength', title: 'Strength: upper body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min upper session with lighter weights.', muscleGroups: fresh.slice(0, 3) };
-    }
-    if (fresh.length >= 3 && lowerFresh >= 3 && upperFresh < 3) {
-      why.push('Upper body was trained recently and is still recovering.');
-      why.push(`Estimated recovery: ${fresh.join(', ')} are ready for work.`);
-      why.push(batteryText);
-      return { ruleId: 'fresh_lower_strength', type: 'strength', title: 'Strength: lower body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min lower session with lighter weights.', muscleGroups: fresh.slice(0, 3) };
-    }
-    const [lo, hi] = zoneRange(maxHr, 2);
-    why.push(f.daysSinceStrength === 0 ? 'You already did strength training today.' : 'Strength training was yesterday.');
-    why.push(`Cardio is at ${Math.round(f.cardioMinutesThisWeek)} of ${cardioTarget} weekly minutes.`);
-    why.push(batteryText);
-    return { ruleId: 'strength_yesterday_cardio', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min of the same cardio at the lower end of the range, or a brisk walk.' };
+  const recovery = computeGarminRecovery(activities, daily, now);
+  const ranked = [...recovery.cards].sort((a,b) => b.recovered - a.recovered || a.fatigue - b.fatigue);
+  const fresh = ranked.filter(c => c.status === 'Fresh');
+  const due = f.daysSinceStrength !== null && f.daysSinceStrength >= 2;
+  const capped = cardioLeadStreak(history, today) >= 2;
+  if (due || fresh.length || capped) {
+    const muscles = (fresh.length ? fresh : ranked).slice(0,3).map(c => c.muscle);
+    const upper = new Set(['chest','back','shoulders','arms','core']);
+    const region = muscles.every(m => upper.has(m)) ? 'upper body' : muscles.every(m => !upper.has(m)) ? 'lower body' : 'most recovered muscles';
+    const why = [due ? `It's been ${f.daysSinceStrength} days since your last strength session — strength leads.` : `${fresh.length} muscle group${fresh.length === 1 ? ' is' : 's are'} fresh — strength leads.`,
+      `Most recovered: ${(fresh.length ? fresh : ranked).slice(0,3).map(c => `${c.muscle} ${c.recovered}%`).join(', ')}.`, batteryText];
+    if (capped) why.push('Two consecutive cardio-lead days already logged — no third cardio lead.');
+    return { rulesVersion: 'v2', ruleId: capped ? 'cardio_lead_cap_strength' : due ? 'strength_due' : region === 'upper body' ? 'fresh_upper_strength' : region === 'lower body' ? 'fresh_lower_strength' : 'fresh_muscle_strength', type: 'strength', title: `Strength: ${region}`, duration: '40–45 min', intensity: fresh.length ? 'Moderate–hard · RPE 7–8' : 'Light–moderate · adjust to soreness', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles, ...(budget.behind ? { finisher: '+15-20 min Zone 2 after lifting' } : {}) };
   }
-
-  // Rule 4: cardio behind weekly target → prefer cardio over strength
-  const cardioBehind = f.cardioMinutesThisWeek < cardioTarget;
-  const strengthBehind = f.strengthThisWeek < strengthTarget;
-
-  // Rule 3: 2+ days since strength and battery >= 40 — unless cardio is behind target
-  if (!cardioBehind && f.daysSinceStrength !== null && f.daysSinceStrength >= 2 && (battery == null || battery >= 40)) {
-    if (strengthBehind) {
-      const muscles = computeGarminRecovery(activities, daily, now).freshest;
-      why.push(`It's been ${f.daysSinceStrength} days since your last strength session. Freshest estimated groups: ${muscles.join(', ')}.`);
-      why.push(batteryText);
-      why.push(`Strength is at ${f.strengthThisWeek} of ${strengthTarget} sessions this week.`);
-      return { ruleId: 'strength_due', type: 'strength', title: 'Strength: full-body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles.length ? muscles : undefined };
-    }
+  const yesterday = f.daysSinceStrength === 1;
+  const farBehind = budget.farBehind && (f.daysSinceCardio === null || f.daysSinceCardio >= 2);
+  const blocked = `${recovery.summary}. No muscle group is fresh (85% recovered). Strength ${f.daysSinceStrength === 0 ? 'was today' : yesterday ? 'was yesterday' : 'is not yet due'}.`;
+  if (yesterday || farBehind) {
+    const [lo,hi] = zoneRange(maxHr,2);
+    return { rulesVersion: 'v2', ruleId: yesterday ? 'strength_yesterday_cardio' : 'cardio_far_behind_pace', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why: [yesterday ? 'Strength was yesterday and no muscle group is fresh yet.' : `Cardio ${Math.round(budget.actual)} min is below half of the ${budget.pace.toFixed(1)} min pace budget; last cardio ${f.daysSinceCardio ?? 'not recorded'} days ago.`, batteryText], strengthBlockedReason: blocked, lowEnergy: '20 min easy walk or gentle cycling.' };
   }
-
-  // Rule 4 fallback: cardio behind target
-  if (cardioBehind) {
-    const [lo, hi] = zoneRange(maxHr, 2);
-    why.push(`Cardio is at ${Math.round(f.cardioMinutesThisWeek)} of ${cardioTarget} weekly minutes — behind target.`);
-    why.push(f.daysSinceCardio === null ? 'No cardio recorded recently.' : `Last cardio: ${f.daysSinceCardio} day${f.daysSinceCardio === 1 ? '' : 's'} ago.`);
-    why.push(batteryText);
-    return { ruleId: 'cardio_behind_target', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min easy walk or gentle cycling.' };
-  }
-
-  // Rule 5: alternate strength / cardio
-  if (strengthBehind) {
-    const muscles = computeGarminRecovery(activities, daily, now).freshest;
-    why.push(`Strength is at ${f.strengthThisWeek} of ${strengthTarget} sessions this week.`);
-    why.push(batteryText);
-    why.push('Alternating with cardio keeps muscle stimulus high while burning calories.');
-    return { ruleId: 'alternate', type: 'strength', title: 'Strength: full-body', duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles.length ? muscles : undefined };
-  }
-  const [lo, hi] = zoneRange(maxHr, 2);
-  why.push('Strength target met this week — rounding out with easy cardio.');
-  why.push(batteryText);
-  return { ruleId: 'alternate', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why, lowEnergy: '20 min easy walk.' };
+  return { rulesVersion: 'v2', ruleId: 'muscle_recovery_wait', type: 'recovery', title: 'Recovery: mobility', duration: '15–20 min', intensity: 'Gentle · comfortable effort', why: [blocked, 'Cardio does not meet either lead condition; allow recovery before another primary session.', batteryText], lowEnergy: 'Rest or gentle stretching.' };
 }
 
 // ---- Strength volume & progressive overload ----
@@ -323,7 +291,7 @@ export function goalInsights(daily: Daily[], activities: Workout[], weightLog: W
   const inRange = (from: string, to: string) => activities.filter((a) => dayOf(a) !== null && (dayOf(a) as string) >= from && (dayOf(a) as string) <= to);
   const r = inRange(recentStart, today);
   const p = inRange(prevStart, shiftDate(today, -7));
-  const cardioMin = (list: Workout[]) => list.filter((a) => isCardioType(a.type)).reduce((s, a) => s + (a.duration_seconds ?? 0) / 60, 0);
+
   const activeKcal = (list: Workout[]) => list.reduce((s, a) => s + (a.calories ?? 0), 0);
   const recentDays = daily.filter((d) => d.date >= recentStart && d.date <= today);
   const prevDays = daily.filter((d) => d.date >= prevStart && d.date < recentStart);
@@ -378,7 +346,8 @@ export function goalInsights(daily: Daily[], activities: Workout[], weightLog: W
       tone: 'up',
     });
   }
-  insights.push(cmp('Cardio volume', cardioMin(r), cardioMin(p), ' min', 'Cardio minutes'));
+  const budget = cardioBudget(activities, goals, today);
+  insights.push({ title: 'Weekly cardio (last 7 days)', text: `${budget.label}. Previous 7 days: ${Math.round(cardioMinutes(activities, prevStart, shiftDate(today, -7)))} min. Pace budget: ${budget.pace.toFixed(1)} min (${budget.daysElapsed}/7 days elapsed this week).`, tone: 'neutral' });
   insights.push(cmp('Active calories', activeKcal(r), activeKcal(p), ' kcal', 'Active calories burned'));
   insights.push(cmp('Daily movement', average(recentDays.map((d) => d.steps)), average(prevDays.map((d) => d.steps)), ' steps', 'Average steps'));
   insights.push(cmp('Recharge signal', average(recentDays.map((d) => d.body_battery_high)), average(prevDays.map((d) => d.body_battery_high)), '/100', 'Average Body Battery high'));
@@ -415,15 +384,8 @@ export function goalInsights(daily: Daily[], activities: Workout[], weightLog: W
     });
   }
 
-  const f = trainingFacts(daily, activities, today);
-  const cardioTarget = goals?.cardio_minutes_target ?? DEFAULT_GOALS.cardio_minutes_target;
-  const recommendation = f.cardioMinutesThisWeek < cardioTarget
-    ? `You're ${Math.round(cardioTarget - f.cardioMinutesThisWeek)} cardio minutes short of this week's target — a Zone 2 session adds fat-burning volume without cutting into muscle recovery.`
-    : f.strengthThisWeek < (goals?.strength_target ?? DEFAULT_GOALS.strength_target)
-      ? `Cardio target is on track. Add one more full-body strength session to keep building muscle.`
-      : lastW && target != null && lastW.weight > target
-        ? `Training targets are met — keep the rhythm and watch the weight trend toward ${target} ${units}.`
-        : 'Targets are met and trends look steady. Keep showing up and log your weight weekly.';
+  const next = nextWorkout(daily, activities, goals, strengthSets, today);
+  const recommendation = `${next.title}. ${next.why[0]}${next.finisher ? ` Optional: ${next.finisher}.` : ''}`;
 
   return { insights: insights.slice(0, 9), recommendation };
 }
