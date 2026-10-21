@@ -188,6 +188,7 @@ export type Database = {
           rec_type: string
           recommendation: Json
           rule_id: string
+          rules_version: string
           source: string
           target_muscles: string[]
           user_id: string
@@ -203,6 +204,7 @@ export type Database = {
           rec_type: string
           recommendation: Json
           rule_id: string
+          rules_version?: string
           source: string
           target_muscles?: string[]
           user_id: string
@@ -218,6 +220,7 @@ export type Database = {
           rec_type?: string
           recommendation?: Json
           rule_id?: string
+          rules_version?: string
           source?: string
           target_muscles?: string[]
           user_id?: string

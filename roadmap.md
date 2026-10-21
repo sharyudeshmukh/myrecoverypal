@@ -1,4 +1,7 @@
 # Goal-driven fitness app (lose weight + build muscle)
+- [ ] Implement v2 strength-first priority, shared rolling cardio budget, explanations and two-day cardio cap.
+- [ ] Version immutable recommendations, add evaluation version filters and methodology notes.
+- [ ] Test and preview today's v2 advice against current private data without replacing v1.
 - [x] Add immutable server recommendation logs and separate post-sync capture without editing the ingest route.
 - [x] Add prior-only replay, automatic adherence and missing-aware outcomes.
 - [x] Build Live/Replay evaluation with bootstrap intervals, rule and goal summaries.
