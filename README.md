@@ -80,6 +80,12 @@ Each Garmin exercise category (e.g. `SQUAT`, `BENCH_PRESS`, `PUSH_UP`) maps to p
 **5. Recommendations people can trust.**
 The next-workout engine is **rule-based, not a black box**. Every recommendation shows the exact numbers that drove it, such as "Strength was yesterday · Body Battery 58 · 7 cardio minutes this week vs a 150-minute target", plus a lower-energy alternative.
 
+## Methodology · rule versions
+
+v2 (2026-10-21): strength-first priority; cardio as weekly budget with pace check; max 2 cardio-lead days in a row.
+
+Existing frozen recommendations remain v1; only new captures use v2. Evaluation can filter versions and displays a version split; replay remains separately labeled. Weekly cardio uses all cardio workout durations in the rolling last 7 Pacific calendar days. Pace is target × elapsed Monday–Sunday days / 7; far behind is below half that pace. Strength leads when due or a muscle is fresh, with optional Zone 2 after lifting. No eligible primary session means mobility rather than unconditional cardio.
+
 ## Metric definitions
 
 | Metric | Definition | Data-quality rule |
@@ -88,7 +94,7 @@ The next-workout engine is **rule-based, not a black box**. Every recommendation
 | Resting heart rate | Garmin's daily resting HR | Trusted only on days with sleep data |
 | Stress | Daily average, 0–100 | `-1` / `-2` = no data → treated as missing |
 | Muscle fatigue | Sets × reps → muscles (primary 100%, secondary 50%), plus cardio leg load from time in HR zones 3–5, decaying over 36–48h | `UNKNOWN` sessions spread as full-body, labeled "estimated" |
-| Weekly targets | Strength sessions ≥ 3, cardio minutes ≥ 150 (user-set) | Calendar weeks in local time |
+| Weekly targets | Strength sessions ≥ 3; weekly cardio (last 7 days) ≥ 150 min (user-set), all cardio workout types | Pacific calendar days; cardio pace checked against elapsed days this week. Evaluation goal outcomes retain complete calendar weeks. |
 | Adherence | Followed / partial (< 60% of duration) / swapped / skipped | Classified from that day's Garmin activities, with no manual input |
 
 ## Evaluation: do the recommendations work?
