@@ -1,12 +1,13 @@
 import type { Json } from '@/integrations/supabase/types';
-import { isCardioType, shiftDate, weekStart, workoutType, type Daily, type Workout } from './fitness-dashboard';
-import { nextWorkout, trainingFacts, effectiveMaxHr, DEFAULT_GOALS, timeInZones, type Goals, type StrengthSet, type NextWorkout } from './goals';
+import { isCardioType, pacificTimestamp, shiftDate, weekStart, workoutType, type Daily, type Workout } from './fitness-dashboard';
+import { nextWorkout, trainingFacts, cardioBudget, effectiveMaxHr, DEFAULT_GOALS, timeInZones, type Goals, type StrengthSet, type NextWorkout, type RecommendationHistory } from './goals';
 import { computeGarminRecovery } from './garmin-recovery';
 
 export type Adherence = 'followed' | 'partial' | 'swapped' | 'skipped';
 export type RecommendationLog = {
   user_id: string; for_date: string; generated_at: string; rec_type: NextWorkout['type'];
   target_muscles: string[]; duration_min: number; hr_low: number | null; hr_high: number | null;
+  rules_version: 'v1' | 'v2';
   rule_id: string; inputs: Json; recommendation: NextWorkout; source: 'live' | 'replay';
 };
 export type EvaluatedLog = RecommendationLog & {
@@ -18,24 +19,25 @@ const dayOf = (a: Workout) => a.start_time_local?.slice(0, 10) ?? '';
 const isCardio = (a: Workout) => isCardioType(a.type);
 
 // All callers share the current engine; replay explicitly excludes target-day data.
-export function freezeRecommendation(daily: Daily[], activities: Workout[], goals: Goals | null, sets: StrengthSet[], forDate: string, userId: string, source: RecommendationLog['source'], generatedAt = new Date().toISOString()): RecommendationLog {
+export function freezeRecommendation(daily: Daily[], activities: Workout[], goals: Goals | null, sets: StrengthSet[], forDate: string, userId: string, source: RecommendationLog['source'], generatedAt = new Date().toISOString(), history: RecommendationHistory[] = []): RecommendationLog {
   const d = daily.filter(x => source === 'replay' ? x.date < forDate : x.date <= forDate);
   // Never evaluate a recommendation using the workout it is meant to predict.
   const a = activities.filter(x => dayOf(x) < forDate && dayOf(x) >= shiftDate(forDate, -90));
   const ids = new Set(a.map(x => x.activity_id));
   const s = sets.filter(x => ids.has(x.activity_id) && x.created_at < `${forDate}T00:00:00`);
-  const now = new Date(`${forDate}T08:00:00`).getTime();
-  const rec = nextWorkout(d, a, goals, s, forDate, now);
+  const now = pacificTimestamp(`${forDate}T08:00:00`);
+  const priorHistory = history.filter(r => r.for_date < forDate);
+  const rec = nextWorkout(d, a, goals, s, forDate, now, priorHistory);
   const facts = trainingFacts(d, a, forDate);
   const maxHr = effectiveMaxHr(goals, d, forDate);
   const recovery = computeGarminRecovery(a, d, now);
   return {
-    user_id: userId, for_date: forDate, generated_at: generatedAt, rec_type: rec.type,
+    user_id: userId, for_date: forDate, generated_at: generatedAt, rec_type: rec.type, rules_version: 'v2',
     target_muscles: rec.muscleGroups ?? [], duration_min: rec.type === 'strength' ? 40 : 30,
     hr_low: rec.type === 'cardio' ? Math.round(maxHr * .6) : null,
     hr_high: rec.type === 'strength' ? null : Math.round(maxHr * (rec.type === 'cardio' ? .7 : .6)),
     rule_id: rec.ruleId, recommendation: rec, source,
-    inputs: JSON.parse(JSON.stringify({ engine_version: 'nextrep-v1', decision_time: '08:00 Garmin local calendar day', facts, max_hr: maxHr, goals: goals ?? DEFAULT_GOALS, muscle_recovery: recovery.cards, daily: d, activities: a, strength_sets: s, historical_settings_unavailable: source === 'replay' })) as Json,
+    inputs: JSON.parse(JSON.stringify({ engine_version: 'nextrep-v2', decision_time: '08:00 America/Los_Angeles', facts, cardio_budget: cardioBudget(a, goals, forDate), prior_recommendations: priorHistory.slice(-2), max_hr: maxHr, goals: goals ?? DEFAULT_GOALS, muscle_recovery: recovery.cards, daily: d, activities: a, strength_sets: s, historical_settings_unavailable: source === 'replay' })) as Json,
   };
 }
 
@@ -93,5 +95,10 @@ export function bootstrapDifference(followed: number[], other: number[], draws =
   return { nFollowed: x.length, nOther: y.length, missing: 0, estimate: mean(x)-mean(y), low: deltas[Math.floor(draws*.05)] ?? 0, high: deltas[Math.ceil(draws*.95)-1] ?? 0, followedMean: mean(x), otherMean: mean(y) };
 }
 export function replayHistory(daily: Daily[], activities: Workout[], goals: Goals | null, sets: StrengthSet[], userId: string, today: string) {
-  return [...daily].sort((a,b)=>a.date.localeCompare(b.date)).filter(d=>d.date < today).map(d=>freezeRecommendation(daily,activities,goals,sets,d.date,userId,'replay'));
+  const logs: RecommendationLog[] = [];
+  for (const d of [...daily].sort((a,b)=>a.date.localeCompare(b.date)).filter(d=>d.date < today)) logs.push(freezeRecommendation(daily,activities,goals,sets,d.date,userId,'replay',undefined,logs));
+  return logs;
+}
+export function filterEvaluationVersions(logs: RecommendationLog[], version: 'all' | 'v1' | 'v2') {
+  return logs.filter(r => version === 'all' || r.rules_version === version);
 }
