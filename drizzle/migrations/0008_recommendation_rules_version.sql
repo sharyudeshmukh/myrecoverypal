@@ -1,0 +1,2 @@
+ALTER TABLE public.recommendation_log ADD COLUMN rules_version text NOT NULL DEFAULT 'v1';
+COMMENT ON COLUMN public.recommendation_log.rules_version IS 'Engine version at capture. Existing immutable snapshots are v1; v2 writers explicitly supply v2. Never recompute historical advice.';

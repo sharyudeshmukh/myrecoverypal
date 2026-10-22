@@ -25,6 +25,7 @@
 - Demo mode is a deterministic client-side fixture behind a data-provider context that swaps in the same shapes the real queries return, so shared components render both sources through one code path; it must never read or write application tables or call the ingest route, and every write action surfaces a sign-in notice instead of persisting.
 
 
-- Recommendation snapshots are immutable server-only inserts keyed by owner/date; Today renders stored advice, while adherence/outcomes remain derived to reflect late syncs.
+- Recommendation snapshots are immutable server-only inserts keyed by owner/date with explicit rules_version; new engine captures consume prior frozen lead history for consecutive-session caps. Today renders stored advice with a read-only current-engine preview for legacy advice, while adherence/outcomes remain derived to reflect late syncs.
+- All rolling cardio budgets use the shared cardioMinutes/cardioBudget helpers; Garmin timezone-less timestamps are parsed as Pacific wall-clock times to keep recovery and recommendations consistent across runtimes.
 - Evaluation math and prior-only replay live in the pure evaluation module with deterministic bootstrap tests; demo evaluation fixtures never call real queries.
 - Garmin sync calls the separate token-verified evaluate-garmin endpoint after successful ingestion; the ingest endpoint stays unchanged. Run the updated sync script and publish new endpoint changes to activate unattended capture.

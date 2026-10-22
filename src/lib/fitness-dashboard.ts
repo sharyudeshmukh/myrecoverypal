@@ -16,9 +16,23 @@ export const APP_TIME_ZONE = 'America/Los_Angeles';
 /** Calendar date (YYYY-MM-DD) in the user's Pacific time zone. */
 export function pacificToday(now = Date.now()) { return new Date(now).toLocaleDateString('en-CA', { timeZone: APP_TIME_ZONE }); }
 export function pacificHour(now = Date.now()) { return Number(new Date(now).toLocaleString('en-US', { timeZone: APP_TIME_ZONE, hour: 'numeric', hourCycle: 'h23' })); }
-const CARDIO_RE = /run|cycl|bik|spin|swim|walk|hik|row|elliptical|stair|cardio|ski|skat|paddl|kayak|dance|hiit|jump/;
+/** Garmin's timezone-less local timestamps are Seattle wall-clock times, including DST. */
+export function pacificTimestamp(local: string): number {
+ const value = local.replace(' ', 'T');
+ if (/Z$|[+-]\d{2}:\d{2}$/.test(value)) return Date.parse(value);
+ const base = Date.parse(`${value}Z`);
+ if (!Number.isFinite(base)) return NaN;
+ const parts = new Intl.DateTimeFormat('en-US', { timeZone: APP_TIME_ZONE, timeZoneName: 'longOffset' }).formatToParts(new Date(base));
+ const offset = parts.find(p => p.type === 'timeZoneName')?.value.match(/GMT([+-])(\d{2}):(\d{2})/);
+ const minutes = offset ? (Number(offset[2]) * 60 + Number(offset[3])) * (offset[1] === '-' ? -1 : 1) : 0;
+ return base - minutes * 60000;
+}
+const CARDIO_RE = /run|cycl|bik|spin|swim|walk|hik|row|elliptical|stair|cardio|zone[ _-]?2|ski|skat|paddl|kayak|dance|hiit|jump/;
 /** Any aerobic Garmin activity (running, cycling, swimming, walking, rowing, elliptical, …) counts as cardio. */
 export function isCardioType(type: string|null) { const t=(type??'').toLowerCase(); return !t.includes('strength') && CARDIO_RE.test(t); }
+export function cardioMinutes(activities: Workout[], from: string, to: string): number {
+ return activities.filter(a => { const date = a.start_time_local?.slice(0,10); return date && date >= from && date <= to && isCardioType(a.type); }).reduce((sum,a) => sum + Math.max(0,a.duration_seconds ?? 0)/60,0);
+}
 export function weeklyWorkouts(activities: Workout[], today: string, days: number) {
  const first=weekStart(shiftDate(today,1-days)), last=weekStart(today);
  const rows: {date:string;count:number;minutes:number;runningKm:number|null;strength_training:number;treadmill_running:number;indoor_cardio:number;running:number;other:number;strength_trainingMinutes:number;treadmill_runningMinutes:number;indoor_cardioMinutes:number;runningMinutes:number;otherMinutes:number}[]=[];

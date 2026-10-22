@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { computeGarminRecovery, decayRate, remainingFatigue, sessionMuscleLoads, todayRecoveryBattery } from '@/lib/garmin-recovery';
-import type { Daily, Workout } from '@/lib/fitness-dashboard';
+import { pacificTimestamp, type Daily, type Workout } from '@/lib/fitness-dashboard';
 const activity = (overrides: Partial<Workout> = {}): Workout => ({ activity_id: 1, name: 'Workout', type: 'strength_training', start_time_local: '2026-10-18T10:00:00', duration_seconds: 2700, avg_hr: 100, raw: null, ...overrides } as Workout);
-const now = new Date('2026-10-18T12:00:00').getTime();
+const now = pacificTimestamp('2026-10-18T12:00:00');
 describe('automatic Garmin recovery', () => {
   it('maps named categories with 100% primary and 50% secondary load', () => {
     const loads = sessionMuscleLoads(activity({ raw: { summarizedExerciseSets: [{ category: 'BENCH_PRESS', sets: 3, reps: 10 }] } }));

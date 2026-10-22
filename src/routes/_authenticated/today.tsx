@@ -33,6 +33,7 @@ function Today() {
       strengthSets={data.strengthSets}
       weightLog={data.weightLog}
       recommendation={data.recommendation}
+      v2Preview={data.v2Preview}
       busy={isFetching}
       refresh={() => {
         void queryClient.invalidateQueries({ queryKey: ['fitness-dashboard', userId] });

@@ -19,6 +19,7 @@ export function generateDemoEvaluation(daily: Daily[], activities: Workout[], go
     base.duration_min = duration;
     base.rule_id = base.rec_type === 'recovery' ? 'low_bb_recovery' : base.rec_type === 'strength' ? 'strength_due' : i%2 ? 'strength_yesterday_cardio' : 'cardio_behind_target';
     base.source = i < 30 ? 'replay' : 'live';
+    base.rules_version = i < 60 ? 'v1' : 'v2';
     base.inputs = { goals: { strength_target: 3, cardio_minutes_target: 150 }, synthetic: true, engine_version: 'synthetic-showcase-v1' };
     base.recommendation = { ...base.recommendation, type:base.rec_type, ruleId:base.rule_id };
     const next = daily.find(x=>x.date === shiftDate(date,1));
