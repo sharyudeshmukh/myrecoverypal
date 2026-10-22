@@ -181,7 +181,7 @@ describe('v2 exact priorities and limits', () => {
     expect(rec.type).toBe('strength'); expect(rec.ruleId).toBe('strength_due');
   });
   it('a single fresh group is enough and is selected first', () => {
-    const named = ['BENCH_PRESS','ROW','SHOULDER_PRESS','CURL','PLANK','SQUAT','DEADLIFT','LUNGE'].map(category => ({category,sets:100,reps:100}));
+    const named = ['BENCH_PRESS','ROW','SHOULDER_PRESS','CURL','PLANK','SQUAT','DEADLIFT'].map(category => ({category,sets:100,reps:100}));
     const rec = nextWorkout([], [heavy('2026-10-20',{summarizedExerciseSets:named})], goals, [], V2_DATE);
     expect(rec.type).toBe('strength'); expect(rec.muscleGroups?.[0]).toBe('calves');
   });

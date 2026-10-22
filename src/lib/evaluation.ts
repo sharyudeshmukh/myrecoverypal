@@ -26,7 +26,7 @@ export function freezeRecommendation(daily: Daily[], activities: Workout[], goal
   const ids = new Set(a.map(x => x.activity_id));
   const s = sets.filter(x => ids.has(x.activity_id) && x.created_at < `${forDate}T00:00:00`);
   const now = pacificTimestamp(`${forDate}T08:00:00`);
-  const priorHistory = history.filter(r => r.for_date < forDate);
+  const priorHistory = history.filter(r => r.for_date < forDate).map(r => ({ for_date: r.for_date, rec_type: r.rec_type }));
   const rec = nextWorkout(d, a, goals, s, forDate, now, priorHistory);
   const facts = trainingFacts(d, a, forDate);
   const maxHr = effectiveMaxHr(goals, d, forDate);
