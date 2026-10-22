@@ -1,7 +1,7 @@
 # Goal-driven fitness app (lose weight + build muscle)
-- [ ] Recalibrate v3 muscle fatigue, truthful per-workout evidence and 48-hour regional strength eligibility.
-- [ ] Version new captures v3, retain v1/v2 history and add methodology notes.
-- [ ] Run v3 regression tests and preview Oct 22 advice against real data without replacing today's snapshot.
+- [x] Recalibrate v3 muscle fatigue, truthful per-workout evidence and 48-hour regional strength eligibility.
+- [x] Version new captures v3, retain v1/v2 history and add methodology notes.
+- [x] Run v3 regression tests and preview Oct 22 advice against real data without replacing today's snapshot.
 - [x] Replace frozen Today advice with automatically refreshed current advice; preserve evaluation history.
 - [x] Implement v2 strength-first priority, shared rolling cardio budget, explanations and two-day cardio cap.
 - [x] Version immutable recommendations, add evaluation version filters and methodology notes.
