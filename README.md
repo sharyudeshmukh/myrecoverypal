@@ -84,7 +84,9 @@ The next-workout engine is **rule-based, not a black box**. Every recommendation
 
 v2 (2026-10-21): strength-first priority; cardio as weekly budget with pace check; max 2 cardio-lead days in a row.
 
-Existing frozen recommendations remain v1; only new captures use v2. Evaluation can filter versions and displays a version split; replay remains separately labeled. Weekly cardio uses all cardio workout durations in the rolling last 7 Pacific calendar days. Pace is target × elapsed Monday–Sunday days / 7; far behind is below half that pace. Strength leads when due or a muscle is fresh, with optional Zone 2 after lifting. No eligible primary session means mobility rather than unconditional cardio.
+v3 (2026-10-22): no same-region strength within 48h; recalibrated fatigue so a session yesterday isn't 'fresh'; upper-body sessions load all upper groups.
+
+Existing frozen v1/v2 recommendations remain unchanged; only new captures use v3. Evaluation can filter versions and displays a version split; replay remains separately labeled. Weekly cardio uses all cardio workout durations in the rolling last 7 Pacific calendar days. Pace is target × elapsed Monday–Sunday days / 7; far behind is below half that pace. Strength leads only for a genuinely fresh upper/lower region, selected by average recovery excluding core. Fresh means ≥85% recovered and no work within 48h; a strength region trained within 48h cannot repeat. Behind-pace cardio is an optional finisher. A typical 35-minute strength session estimates about 52% recovery after 24h and 81% after 48h at standard Body Battery; these are workload estimates, not measured repair. No eligible primary session means mobility rather than unconditional cardio.
 
 ## Metric definitions
 

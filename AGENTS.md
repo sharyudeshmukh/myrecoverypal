@@ -20,7 +20,7 @@
 - Compute goal rules (next-workout engine, HR zones, insights feed, strength volume/overload) in the pure `src/lib/goals.ts` module with tests, so thresholds stay independent of UI.
 - Signed-in app pages live under `_authenticated/` with a shared bottom nav (Today `/today`, Workouts `/workouts`, Trends `/trends`, Goals `/goals`, Recovery `/workout-log`); `/` stays the public sign-in page and `/dashboard` redirects to `/trends`.
 - A list page with child detail routes must be an index route (`workouts.index.tsx`) — a plain `workouts.tsx` parent without an `<Outlet />` shadows its children.
-- Automatic muscle recovery is computed in the pure garmin-recovery module from recent Garmin raw activities; Recovery and Today share it so muscle suggestions agree without manual inputs.
+- Automatic muscle recovery and strength-region inference share the pure garmin-recovery module; Today chooses eligible regions by average recovery excluding core and never bypasses freshness/48-hour regional guards, even for cardio caps. Evidence is per contributing workout/group, with title-based regional fallback distinguished from named exercises.
 - Dashboard reads include raw payloads only for recent recovery activities and poll the user-keyed cache every minute so incoming Garmin data appears automatically without fetching historical raw payloads.
 - Demo mode is a deterministic client-side fixture behind a data-provider context that swaps in the same shapes the real queries return, so shared components render both sources through one code path; it must never read or write application tables or call the ingest route, and every write action surfaces a sign-in notice instead of persisting.
 

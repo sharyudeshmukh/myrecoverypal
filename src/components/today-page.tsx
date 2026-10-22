@@ -85,7 +85,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
       </header>
       <main className="mx-auto max-w-5xl space-y-10 px-5 py-8">
         <section data-tour="next-workout">
-          <p className="mb-2 text-xs font-medium uppercase text-primary">Today / next workout · current advice · {next.rulesVersion ?? 'v2'}</p>
+          <p className="mb-2 text-xs font-medium uppercase text-primary">Today / next workout · current advice · {next.rulesVersion ?? 'v3'}</p>
           <div className="rounded-xl border border-primary/40 bg-card p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
@@ -103,7 +103,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
               </div>
             ) : null}
             <AppLink to="/workout-log" className="mt-4 block text-sm text-primary">{recovery.summary}</AppLink>
-            <p className="mt-4 text-xs text-muted-foreground">Rule: <span className="font-mono">{next.ruleId}</span> · {next.rulesVersion ?? 'v1'}</p>
+            <p className="mt-4 text-xs text-muted-foreground">Rule: <span className="font-mono">{next.ruleId}</span> · {next.rulesVersion ?? 'v3'}</p>
             <p className="mt-3 text-sm text-primary">{budget.label}</p>
             <p className="mt-1 text-xs text-muted-foreground">Pace budget: {budget.pace.toFixed(1)} min · {budget.daysElapsed}/7 days elapsed this week · Pacific time</p>
             {next.finisher && <p className="mt-4 border-l-2 border-primary pl-3 text-sm">Optional finisher: {next.finisher}</p>}
