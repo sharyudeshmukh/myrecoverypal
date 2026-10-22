@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { generateDemoData } from '@/lib/demo-data';
 import { nextWorkout, progressiveOverload, goalInsights } from '@/lib/goals';
 import { computeGarminRecovery } from '@/lib/garmin-recovery';
+import { pacificTimestamp } from '@/lib/fitness-dashboard';
 
 const TODAY = '2026-10-18';
-const NOW = new Date(`${TODAY}T12:00:00`).getTime();
+const NOW = pacificTimestamp(`${TODAY}T12:00:00`);
 
 describe('demo data', () => {
   it('is deterministic for the same anchor date', () => {

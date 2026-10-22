@@ -226,7 +226,12 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
       const hours = a.start_time_local ? (now - pacificTimestamp(a.start_time_local)) / 36e5 : Infinity;
       return hours >= 0 && hours < 48 && strengthRegions(a).includes(region);
     }).sort((a,b) => (b.start_time_local ?? '').localeCompare(a.start_time_local ?? ''));
-    return { region, cards, average: cards.reduce((sum,c) => sum + c.recovered,0)/cards.length, fresh: !recent.length && cards.every(c => c.status === 'Fresh'), recent: recent[0] };
+    const regionAverage = cards.reduce((sum,c) => sum + c.recovered,0)/cards.length;
+    // A lower split's incidental deadlift back load is not an upper session;
+    // it still lowers the regional average. Cardio directly working a region
+    // observes the same 48-hour guard as strength.
+    const recentCardio = cards.some(c => c.causes.some(cause => cause.evidence === 'cardio' && (now - pacificTimestamp(cause.date)) / 36e5 < 48));
+    return { region, cards, average: regionAverage, fresh: !recent.length && !recentCardio && regionAverage >= 85, recent: recent[0] };
   }).sort((a,b) => b.average - a.average);
   const eligible = regions.filter(r => r.fresh);
   const due = f.daysSinceStrength !== null && f.daysSinceStrength >= 2;
@@ -238,7 +243,7 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
     const other = regions.find(r => r.region !== chosen.region);
     const priorDate = other?.recent?.start_time_local?.slice(0,10);
     const alternation = other?.recent ? `${other.region === 'upper' ? 'Upper' : 'Lower'} body trained ${priorDate === shiftDate(today,-1) ? 'yesterday' : 'within the last 48h'}, so ${region} today.` : `${region === 'upper body' ? 'Upper' : 'Lower'} body is fresh and has the highest eligible average recovery.`;
-    const why = [alternation, `${region} average recovery: ${chosen.average.toFixed(0)}% — ${chosen.cards.map(c => `${c.muscle} ${c.recovered}%`).join(', ')}. All groups ≥85% with no work in the last 48h.`, batteryText];
+    const why = [alternation, `${region} average recovery: ${chosen.average.toFixed(0)}% — ${chosen.cards.map(c => `${c.muscle} ${c.recovered}%`).join(', ')}. Region average ≥85%, with no regional training in the last 48h; incidental secondary load still counts toward recovery.`, batteryText];
     if (capped) why.push('Two consecutive cardio-lead days already logged — no third cardio lead.');
     return { rulesVersion: 'v3', ruleId: due ? 'strength_due' : `fresh_${chosen.region}_strength`, type: 'strength', title: `Strength: ${region}`, duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles, ...(budget.behind ? { finisher: '+15-20 min Zone 2 after lifting' } : {}) };
   }
