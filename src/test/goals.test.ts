@@ -44,6 +44,14 @@ describe('HR zones', () => {
 });
 
 describe('nextWorkout rules', () => {
+  it('current advice changes with synced Body Battery instead of retaining earlier advice', () => {
+    const initial = daily({ date: TODAY, raw: { stats: { bodyBatteryMostRecentValue: 18 } } });
+    const synced = daily({ date: TODAY, raw: { stats: { bodyBatteryMostRecentValue: 78 } } });
+    const history = [{ for_date: TODAY, rec_type: 'recovery' as const }];
+    expect(nextWorkout([initial], [], goals, [], TODAY, undefined, history).type).toBe('recovery');
+    expect(nextWorkout([synced], [], goals, [], TODAY, undefined, history).type).toBe('strength');
+    expect(history[0]?.rec_type).toBe('recovery');
+  });
   it('recovery when Body Battery is under 25', () => {
     const d = daily({ date: TODAY, raw: { stats: { bodyBatteryMostRecentValue: 18 } } });
     expect(nextWorkout([d], [], goals, [], TODAY).type).toBe('recovery');
