@@ -1,5 +1,5 @@
 # Goal-driven fitness app (lose weight + build muscle)
-- [ ] Replace frozen Today advice with automatically refreshed current advice; preserve evaluation history.
+- [x] Replace frozen Today advice with automatically refreshed current advice; preserve evaluation history.
 - [x] Implement v2 strength-first priority, shared rolling cardio budget, explanations and two-day cardio cap.
 - [x] Version immutable recommendations, add evaluation version filters and methodology notes.
 - [x] Test and preview today's v2 advice against current private data without replacing v1.
