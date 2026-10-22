@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDemoMode } from '@/lib/demo-context';
 import { Sparkline } from '@/components/sparkline';
 import { OVERNIGHT, average, pacificToday, shiftDate, type Daily, type Workout } from '@/lib/fitness-dashboard';
-import { DEFAULT_GOALS, cardioBudget, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet, type WeightEntry, type NextWorkout } from '@/lib/goals';
+import { DEFAULT_GOALS, cardioBudget, goalInsights, nextWorkout, rawStats, type Goals, type StrengthSet, type WeightEntry, type RecommendationHistory } from '@/lib/goals';
 import { useEffect, useState, type ReactNode } from 'react';
 import { computeGarminRecovery } from '@/lib/garmin-recovery';
 
@@ -27,8 +27,7 @@ function Tile({ icon: Icon, label, value, detail, avgLabel, spark, children }: {
   );
 }
 
-export function TodayPage({ daily, activities, goals, strengthSets, weightLog = [], refresh, busy, recommendation, v2Preview }: { daily: Daily[]; activities: Workout[]; goals: Goals | null; strengthSets: StrengthSet[]; weightLog?: WeightEntry[]; refresh: () => void; busy: boolean; recommendation?: NextWorkout | null; v2Preview?: NextWorkout | null }) {
-  const [showV2, setShowV2] = useState(false);
+export function TodayPage({ daily, activities, goals, strengthSets, weightLog = [], refresh, busy, recommendationHistory = [] }: { daily: Daily[]; activities: Workout[]; goals: Goals | null; strengthSets: StrengthSet[]; weightLog?: WeightEntry[]; refresh: () => void; busy: boolean; recommendationHistory?: RecommendationHistory[] }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
   const demo = useDemoMode();
@@ -38,7 +37,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
   const current = sorted.find((d) => d.date === today);
   const week7 = sorted.filter((d) => d.date >= shiftDate(today, -6));
   const budget = cardioBudget(activities, goals, today);
-  const next = (showV2 ? v2Preview : recommendation) ?? nextWorkout(daily, activities, goals, strengthSets, today, now);
+  const next = nextWorkout(daily, activities, goals, strengthSets, today, now, recommendationHistory);
   const insights = goalInsights(daily, activities, weightLog, strengthSets, goals, today);
   const stepsGoal = goals?.steps_goal ?? DEFAULT_GOALS.steps_goal;
   const units = goals?.units ?? 'kg';
@@ -86,8 +85,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
       </header>
       <main className="mx-auto max-w-5xl space-y-10 px-5 py-8">
         <section data-tour="next-workout">
-          <p className="mb-2 text-xs font-medium uppercase text-primary">Today / next workout{showV2 ? ' · v2 preview — not saved' : recommendation ? ` · frozen recommendation · ${recommendation.rulesVersion ?? 'v1'}` : ' · v2'}</p>
-          {v2Preview && <div className="mb-4 flex flex-wrap items-center gap-3"><Button variant={showV2 ? 'secondary' : 'outline'} size="sm" onClick={() => setShowV2(!showV2)}>{showV2 ? 'Show frozen advice' : "Preview today’s v2 advice"}</Button><p className="text-xs text-muted-foreground">Today’s frozen v1 advice stays unchanged.</p></div>}
+          <p className="mb-2 text-xs font-medium uppercase text-primary">Today / next workout · current advice · {next.rulesVersion ?? 'v2'}</p>
           <div className="rounded-xl border border-primary/40 bg-card p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
@@ -107,7 +105,7 @@ export function TodayPage({ daily, activities, goals, strengthSets, weightLog = 
             <AppLink to="/workout-log" className="mt-4 block text-sm text-primary">{recovery.summary}</AppLink>
             <p className="mt-4 text-xs text-muted-foreground">Rule: <span className="font-mono">{next.ruleId}</span> · {next.rulesVersion ?? 'v1'}</p>
             <p className="mt-3 text-sm text-primary">{budget.label}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Pace budget: {budget.pace.toFixed(1)} min · {budget.daysElapsed}/7 days elapsed this week · Pacific time{recommendation && !showV2 ? ' · current progress, not frozen inputs' : ''}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Pace budget: {budget.pace.toFixed(1)} min · {budget.daysElapsed}/7 days elapsed this week · Pacific time</p>
             {next.finisher && <p className="mt-4 border-l-2 border-primary pl-3 text-sm">Optional finisher: {next.finisher}</p>}
             {next.strengthBlockedReason && <p className="mt-3 text-sm text-muted-foreground">Why not strength? {next.strengthBlockedReason}</p>}
             <ul className="mt-5 space-y-2 border-t pt-4">

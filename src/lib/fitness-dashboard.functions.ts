@@ -2,7 +2,6 @@ import { pacificToday } from '@/lib/fitness-dashboard';
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { captureRecommendations } from './evaluation.server';
-import { nextWorkout } from './goals';
 export const fetchFitnessDashboard = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const [daily, activities, goals, weightLog, strengthSets, recoveryActivities] = await Promise.all([
     context.supabase.from('garmin_daily').select('*').order('date', { ascending: false }).limit(100),
@@ -19,10 +18,8 @@ export const fetchFitnessDashboard = createServerFn({ method: 'GET' }).middlewar
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const today = pacificToday();
   const evaluation = await captureRecommendations(context.supabase, supabaseAdmin, context.userId, today, false);
-  const frozen = evaluation.logs.find(r => r.for_date === today);
   return {
-    recommendation: frozen ? { ...frozen.recommendation, rulesVersion: frozen.rules_version } : null,
-    v2Preview: frozen?.rules_version === 'v1' ? nextWorkout(evaluation.data.daily,evaluation.data.activities,evaluation.data.goals,evaluation.data.sets,today,Date.now(),evaluation.logs) : null,
+    recommendationHistory: evaluation.logs.map(r => ({ for_date: r.for_date, rec_type: r.rec_type })),
     daily: daily.data.map((d) => ({ ...d, raw: d.raw })),
     activities: activities.data.map((a) => ({ ...a, raw: rawById.get(a.activity_id) ?? null })),
     goals: goals.data ?? null,
