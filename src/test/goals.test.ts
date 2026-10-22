@@ -89,7 +89,7 @@ describe('nextWorkout rules', () => {
   });
   it('strength due outranks a cardio deficit with optional finisher', () => {
     const d = daily({ date: TODAY, raw: { stats: { bodyBatteryMostRecentValue: 60 } } });
-    const acts = [workout({ activity_id: 1, date: '2026-10-14', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-15', type: 'strength_training' }), workout({ activity_id: 3, date: '2026-10-16', type: 'strength_training' })];
+    const acts = [workout({ activity_id: 1, date: '2026-10-13', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-14', type: 'strength_training' }), workout({ activity_id: 3, date: '2026-10-15', type: 'strength_training' })];
     const rec = nextWorkout([d], acts, goals, [], TODAY);
     expect(rec.type).toBe('strength');
     expect(rec.ruleId).toBe('strength_due');
