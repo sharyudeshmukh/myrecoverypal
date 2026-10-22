@@ -5,9 +5,9 @@ const activity = (overrides: Partial<Workout> = {}): Workout => ({ activity_id: 
 const now = pacificTimestamp('2026-10-18T12:00:00');
 describe('automatic Garmin recovery', () => {
   it('maps named categories with 100% primary and 50% secondary load', () => {
-    const loads = sessionMuscleLoads(activity({ raw: { summarizedExerciseSets: [{ category: 'BENCH_PRESS', sets: 3, reps: 10 }] } }));
-    expect(loads.find(l => l.muscle === 'chest')?.load).toBe(55);
-    expect(loads.find(l => l.muscle === 'arms')?.load).toBe(27.5);
+    const loads = sessionMuscleLoads(activity({ raw: { summarizedExerciseSets: [{ category: 'BENCH_PRESS', sets: 10, reps: 30 }] } }));
+    expect(loads.find(l => l.muscle === 'chest')?.load).toBe(550);
+    expect(loads.find(l => l.muscle === 'arms')?.load).toBe(275);
     expect(loads.some(l => l.muscle === 'quads')).toBe(false);
   });
   it('uses duration when reps are missing', () => {
@@ -17,8 +17,8 @@ describe('automatic Garmin recovery', () => {
   it('spreads unknown strength evenly over all nine groups, scaled by duration and HR', () => {
     const loads = sessionMuscleLoads(activity({ raw: { summarizedExerciseSets: [{ category: 'UNKNOWN' }] } }));
     expect(loads).toHaveLength(9);
-    expect(loads.every(l => l.load === 45 && l.evidence === 'estimated')).toBe(true);
-    expect(sessionMuscleLoads(activity({ duration_seconds: 5400, avg_hr: 120 }))[0]?.load).toBe(108);
+    expect(loads.every(l => Math.abs(l.load - 120 * 45 / 35) < .001 && l.evidence === 'estimated')).toBe(true);
+    expect(sessionMuscleLoads(activity({ duration_seconds: 5400, avg_hr: 120 }))[0]?.load).toBeCloseTo(120 * 90 / 35 * 1.1);
   });
   it('adds running fatigue to legs and increases load for zones 3–5', () => {
     const loads = sessionMuscleLoads(activity({ type: 'running', duration_seconds: 1800, raw: { hrTimeInZone_3: 600, hrTimeInZone_4: 300, hrTimeInZone_5: 0 } }));
@@ -31,9 +31,9 @@ describe('automatic Garmin recovery', () => {
     expect(loads.find(l => l.muscle === 'quads')?.load).toBe(15);
     expect(loads.find(l => l.muscle === 'chest')?.load).toBe(4.5);
   });
-  it('decays large muscles 90% by 48h and small muscles by 36h', () => {
-    expect(remainingFatigue(100, 48, 'quads', null)).toBeCloseTo(10);
-    expect(remainingFatigue(100, 36, 'arms', null)).toBeCloseTo(10);
+  it('calibrates all worked groups near 52% at 24h and 81% at 48h', () => {
+    expect(100 - remainingFatigue(120, 24, 'quads', null)).toBeCloseTo(52);
+    expect(100 - remainingFatigue(120, 48, 'arms', null)).toBeCloseTo(80.8);
   });
   it('slows decay 25% below battery 40 and accelerates at 70', () => {
     expect(decayRate(39)).toBe(0.75);
@@ -58,5 +58,38 @@ describe('automatic Garmin recovery', () => {
     expect(result.cards.find(c => c.muscle === 'quads')?.causes[0]?.activityId).toBe(1);
     expect(result.freshest).toEqual(['chest', 'back', 'shoulders']);
     expect(result.cards.find(c => c.muscle === 'quads')?.status).toBe('Recovering');
+  });
+});
+describe('v3 regional workload and freshness', () => {
+  const upper = activity({ name: 'Upper body', duration_seconds: 32 * 60, raw: { summarizedExerciseSets: [{ category: 'ROW', sets: 1, reps: 7 }] } });
+  it('loads all four upper groups below 70% one day after a 32-minute upper session', () => {
+    const result = computeGarminRecovery([upper], [], pacificTimestamp('2026-10-19T10:00:00'));
+    for (const muscle of ['chest', 'back', 'shoulders', 'arms']) {
+      const card = result.cards.find(c => c.muscle === muscle);
+      expect(card?.recovered).toBeLessThan(70);
+      expect(card?.recovered).toBeGreaterThanOrEqual(40);
+      expect(card?.status).not.toBe('Fresh');
+    }
+  });
+  it('keeps recently worked groups non-fresh even at over 85%', () => {
+    const result = computeGarminRecovery([activity({ name: 'Upper body', duration_seconds: 60 })], [], pacificTimestamp('2026-10-19T10:00:00'));
+    const chest = result.cards.find(c => c.muscle === 'chest');
+    expect(chest?.recovered).toBeGreaterThanOrEqual(85);
+    expect(chest?.status).not.toBe('Fresh');
+  });
+  it('retains named evidence for row groups and estimated evidence for unlisted chest', () => {
+    const loads = sessionMuscleLoads(upper);
+    expect(loads.find(c => c.muscle === 'back')?.evidence).toBe('named');
+    expect(loads.find(c => c.muscle === 'chest')?.evidence).toBe('estimated');
+  });
+  it('infers upper from named exercises even without a split title', () => {
+    const loads = sessionMuscleLoads({ ...upper, name: 'Strength' });
+    expect(loads.map(c => c.muscle).sort()).toEqual(['arms','back','chest','shoulders']);
+  });
+  it('duration and recorded sets both increase session workload', () => {
+    const short = sessionMuscleLoads(upper).find(c => c.muscle === 'chest')?.load ?? 0;
+    const long = sessionMuscleLoads({ ...upper, duration_seconds: 40 * 60 }).find(c => c.muscle === 'chest')?.load ?? 0;
+    const sets = sessionMuscleLoads({ ...upper, raw: { summarizedExerciseSets: [{ category: 'ROW', sets: 16, reps: 7 }] } }).find(c => c.muscle === 'chest')?.load ?? 0;
+    expect(long).toBeGreaterThan(short); expect(sets).toBeGreaterThan(long);
   });
 });

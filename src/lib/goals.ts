@@ -1,7 +1,7 @@
 import type { Tables } from '@/integrations/supabase/types';
 import type { Daily, Workout } from '@/lib/fitness-dashboard';
 import { isCardioType, cardioMinutes, pacificTimestamp, shiftDate, weekStart, workoutType, average } from '@/lib/fitness-dashboard';
-import { computeGarminRecovery } from '@/lib/garmin-recovery';
+import { computeGarminRecovery, RECOVERY_REGIONS, strengthRegions } from '@/lib/garmin-recovery';
 
 export type Goals = Tables<'user_goals'>;
 export type WeightEntry = Tables<'weight_log'>;
@@ -177,7 +177,7 @@ export type NextWorkout = {
   why: string[];
   lowEnergy: string;
   muscleGroups?: MuscleGroup[] | undefined;
-  rulesVersion?: 'v1' | 'v2';
+  rulesVersion?: 'v1' | 'v2' | 'v3';
   finisher?: string;
   strengthBlockedReason?: string;
 };
@@ -217,30 +217,44 @@ export function nextWorkout(daily: Daily[], activities: Workout[], goals: Goals 
   const sleepText = f.sleepLastNight != null ? `Last night's sleep: ${(f.sleepLastNight / 3600).toFixed(1)} h.` : 'No sleep data recorded last night.';
   // Recovery overrides are unchanged.
   if ((battery != null && battery < 25) || f.consecutiveDays >= 4) {
-    return { rulesVersion: 'v2', ruleId: battery != null && battery < 25 ? 'low_bb_recovery' : 'consecutive_training_recovery', type: 'recovery', title: 'Recovery: easy walk + mobility', duration: '30–45 min walk + 10 min mobility', intensity: 'Zone 1 · under ' + Math.round(maxHr * .6) + ' bpm', why: [battery != null && battery < 25 ? `Body Battery is ${Math.round(battery)}/100 — below the 25 recovery threshold.` : `You've trained ${f.consecutiveDays} days in a row.`, sleepText, 'Easy movement keeps fat-burning volume up while muscle repair catches up.'], lowEnergy: '10 min of gentle stretching or a slow 15 min walk.' };
+    return { rulesVersion: 'v3', ruleId: battery != null && battery < 25 ? 'low_bb_recovery' : 'consecutive_training_recovery', type: 'recovery', title: 'Recovery: easy walk + mobility', duration: '30–45 min walk + 10 min mobility', intensity: 'Zone 1 · under ' + Math.round(maxHr * .6) + ' bpm', why: [battery != null && battery < 25 ? `Body Battery is ${Math.round(battery)}/100 — below the 25 recovery threshold.` : `You've trained ${f.consecutiveDays} days in a row.`, sleepText, 'Easy movement keeps fat-burning volume up while muscle repair catches up.'], lowEnergy: '10 min of gentle stretching or a slow 15 min walk.' };
   }
   const recovery = computeGarminRecovery(activities, daily, now);
-  const ranked = [...recovery.cards].sort((a,b) => b.recovered - a.recovered || a.fatigue - b.fatigue);
-  const fresh = ranked.filter(c => c.status === 'Fresh');
+  const regions = (['upper', 'lower'] as const).map(region => {
+    const cards = recovery.cards.filter(c => RECOVERY_REGIONS[region].some(m => m === c.muscle));
+    const recent = activities.filter(a => {
+      const hours = a.start_time_local ? (now - pacificTimestamp(a.start_time_local)) / 36e5 : Infinity;
+      return hours >= 0 && hours < 48 && strengthRegions(a).includes(region);
+    }).sort((a,b) => (b.start_time_local ?? '').localeCompare(a.start_time_local ?? ''));
+    const regionAverage = cards.reduce((sum,c) => sum + c.recovered,0)/cards.length;
+    // A lower split's incidental deadlift back load is not an upper session;
+    // it still lowers the regional average. Cardio directly working a region
+    // observes the same 48-hour guard as strength.
+    const recentCardio = cards.some(c => c.causes.some(cause => cause.evidence === 'cardio' && (now - pacificTimestamp(cause.date)) / 36e5 < 48));
+    return { region, cards, average: regionAverage, fresh: !recent.length && !recentCardio && regionAverage >= 85, recent: recent[0] };
+  }).sort((a,b) => b.average - a.average);
+  const eligible = regions.filter(r => r.fresh);
   const due = f.daysSinceStrength !== null && f.daysSinceStrength >= 2;
   const capped = cardioLeadStreak(history, today) >= 2;
-  if (due || fresh.length || capped) {
-    const muscles = (fresh.length ? fresh : ranked).slice(0,3).map(c => c.muscle);
-    const upper = new Set(['chest','back','shoulders','arms','core']);
-    const region = muscles.every(m => upper.has(m)) ? 'upper body' : muscles.every(m => !upper.has(m)) ? 'lower body' : 'most recovered muscles';
-    const why = [due ? `It's been ${f.daysSinceStrength} days since your last strength session — strength leads.` : `${fresh.length} muscle group${fresh.length === 1 ? ' is' : 's are'} fresh — strength leads.`,
-      `Most recovered: ${(fresh.length ? fresh : ranked).slice(0,3).map(c => `${c.muscle} ${c.recovered}%`).join(', ')}.`, batteryText];
+  const chosen = eligible[0];
+  if (chosen) {
+    const muscles = chosen.cards.map(c => c.muscle);
+    const region = `${chosen.region} body`;
+    const other = regions.find(r => r.region !== chosen.region);
+    const priorDate = other?.recent?.start_time_local?.slice(0,10);
+    const alternation = other?.recent ? `${other.region === 'upper' ? 'Upper' : 'Lower'} body trained ${priorDate === shiftDate(today,-1) ? 'yesterday' : 'within the last 48h'}, so ${region} today.` : `${region === 'upper body' ? 'Upper' : 'Lower'} body is fresh and has the highest eligible average recovery.`;
+    const why = [alternation, `${region} average recovery: ${chosen.average.toFixed(0)}% — ${chosen.cards.map(c => `${c.muscle} ${c.recovered}%`).join(', ')}. Region average ≥85%, with no regional training in the last 48h; incidental secondary load still counts toward recovery.`, batteryText];
     if (capped) why.push('Two consecutive cardio-lead days already logged — no third cardio lead.');
-    return { rulesVersion: 'v2', ruleId: due ? 'strength_due' : fresh.length ? (region === 'upper body' ? 'fresh_upper_strength' : region === 'lower body' ? 'fresh_lower_strength' : 'fresh_muscle_strength') : 'cardio_lead_cap_strength', type: 'strength', title: `Strength: ${region}`, duration: '40–45 min', intensity: fresh.length ? 'Moderate–hard · RPE 7–8' : 'Light–moderate · adjust to soreness', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles, ...(budget.behind ? { finisher: '+15-20 min Zone 2 after lifting' } : {}) };
+    return { rulesVersion: 'v3', ruleId: due ? 'strength_due' : `fresh_${chosen.region}_strength`, type: 'strength', title: `Strength: ${region}`, duration: '40–45 min', intensity: 'Moderate–hard · RPE 7–8', why, lowEnergy: 'A shortened 20–25 min session with lighter weights.', muscleGroups: muscles, ...(budget.behind ? { finisher: '+15-20 min Zone 2 after lifting' } : {}) };
   }
   const yesterday = f.daysSinceStrength === 1;
   const farBehind = budget.farBehind && (f.daysSinceCardio === null || f.daysSinceCardio >= 2);
-  const blocked = `${recovery.summary}. No muscle group is fresh (85% recovered). Strength ${f.daysSinceStrength === 0 ? 'was today' : yesterday ? 'was yesterday' : 'is not yet due'}.`;
-  if (yesterday || farBehind) {
+  const blocked = regions.map(r => `${r.region === 'upper' ? 'Upper' : 'Lower'} body ${r.recent ? 'trained within the last 48h' : 'not fully fresh'} (average ${r.average.toFixed(0)}%: ${r.cards.map(c => `${c.muscle} ${c.recovered}%`).join(', ')})`).join('. ') + '.';
+  if (!capped && (yesterday || farBehind)) {
     const [lo,hi] = zoneRange(maxHr,2);
-    return { rulesVersion: 'v2', ruleId: yesterday ? 'strength_yesterday_cardio' : 'cardio_far_behind_pace', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why: [yesterday ? 'Strength was yesterday and no muscle group is fresh yet.' : `Cardio ${Math.round(budget.actual)} min is below half of the ${budget.pace.toFixed(1)} min pace budget; last cardio ${f.daysSinceCardio ?? 'not recorded'} days ago.`, batteryText], strengthBlockedReason: blocked, lowEnergy: '20 min easy walk or gentle cycling.' };
+    return { rulesVersion: 'v3', ruleId: yesterday ? 'strength_yesterday_cardio' : 'cardio_far_behind_pace', type: 'cardio', title: 'Zone 2 cardio', duration: '30–40 min', intensity: `Zone 2 · ${lo}–${hi} bpm`, why: [yesterday ? 'Strength was yesterday and neither region is genuinely fresh yet.' : `Cardio ${Math.round(budget.actual)} min is below half of the ${budget.pace.toFixed(1)} min pace budget; last cardio ${f.daysSinceCardio ?? 'not recorded'} days ago.`, batteryText], strengthBlockedReason: blocked, lowEnergy: '20 min easy walk or gentle cycling.' };
   }
-  return { rulesVersion: 'v2', ruleId: 'muscle_recovery_wait', type: 'recovery', title: 'Recovery: mobility', duration: '15–20 min', intensity: 'Gentle · comfortable effort', why: [blocked, 'Cardio does not meet either lead condition; allow recovery before another primary session.', batteryText], lowEnergy: 'Rest or gentle stretching.' };
+  return { rulesVersion: 'v3', ruleId: capped ? 'cardio_lead_cap_recovery' : 'muscle_recovery_wait', type: 'recovery', title: 'Recovery: mobility', duration: '15–20 min', intensity: 'Gentle · comfortable effort', why: [blocked, capped ? 'Two consecutive cardio leads already logged; recover rather than lift an unready region or lead with cardio again.' : 'Cardio does not meet either lead condition; allow recovery before another primary session.', batteryText], lowEnergy: 'Rest or gentle stretching.' };
 }
 
 // ---- Strength volume & progressive overload ----

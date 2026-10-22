@@ -48,7 +48,7 @@ export async function captureRecommendations(reader: SupabaseClient<Database>, w
   if (logs.error || logs.data.length === 1000) throw new Error('Recommendation history could not be loaded completely.');
   return { data, logs: logs.data.map(r => {
     if (!['strength','cardio','recovery'].includes(r.rec_type) || !['live','replay'].includes(r.source)) throw new Error('Invalid frozen recommendation.');
-    if (!['v1','v2'].includes(r.rules_version)) throw new Error('Invalid rules version.');
+    if (!['v1','v2','v3'].includes(r.rules_version)) throw new Error('Invalid rules version.');
     return { ...r, rules_version: r.rules_version as RecommendationLog['rules_version'], rec_type: r.rec_type as RecommendationLog['rec_type'], source: r.source as RecommendationLog['source'], recommendation: r.recommendation as unknown as RecommendationLog['recommendation'] };
   }) };
 }

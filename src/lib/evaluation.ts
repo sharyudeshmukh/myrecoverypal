@@ -7,7 +7,7 @@ export type Adherence = 'followed' | 'partial' | 'swapped' | 'skipped';
 export type RecommendationLog = {
   user_id: string; for_date: string; generated_at: string; rec_type: NextWorkout['type'];
   target_muscles: string[]; duration_min: number; hr_low: number | null; hr_high: number | null;
-  rules_version: 'v1' | 'v2';
+  rules_version: 'v1' | 'v2' | 'v3';
   rule_id: string; inputs: Json; recommendation: NextWorkout; source: 'live' | 'replay';
 };
 export type EvaluatedLog = RecommendationLog & {
@@ -32,12 +32,12 @@ export function freezeRecommendation(daily: Daily[], activities: Workout[], goal
   const maxHr = effectiveMaxHr(goals, d, forDate);
   const recovery = computeGarminRecovery(a, d, now);
   return {
-    user_id: userId, for_date: forDate, generated_at: generatedAt, rec_type: rec.type, rules_version: 'v2',
+    user_id: userId, for_date: forDate, generated_at: generatedAt, rec_type: rec.type, rules_version: 'v3',
     target_muscles: rec.muscleGroups ?? [], duration_min: rec.type === 'strength' ? 40 : 30,
     hr_low: rec.type === 'cardio' ? Math.round(maxHr * .6) : null,
     hr_high: rec.type === 'strength' ? null : Math.round(maxHr * (rec.type === 'cardio' ? .7 : .6)),
     rule_id: rec.ruleId, recommendation: rec, source,
-    inputs: JSON.parse(JSON.stringify({ engine_version: 'nextrep-v2', decision_time: '08:00 America/Los_Angeles', facts, cardio_budget: cardioBudget(a, goals, forDate), prior_recommendations: priorHistory.slice(-2), max_hr: maxHr, goals: goals ?? DEFAULT_GOALS, muscle_recovery: recovery.cards, daily: d, activities: a, strength_sets: s, historical_settings_unavailable: source === 'replay' })) as Json,
+    inputs: JSON.parse(JSON.stringify({ engine_version: 'nextrep-v3', decision_time: '08:00 America/Los_Angeles', facts, cardio_budget: cardioBudget(a, goals, forDate), prior_recommendations: priorHistory.slice(-2), max_hr: maxHr, goals: goals ?? DEFAULT_GOALS, muscle_recovery: recovery.cards, daily: d, activities: a, strength_sets: s, historical_settings_unavailable: source === 'replay' })) as Json,
   };
 }
 
@@ -99,6 +99,6 @@ export function replayHistory(daily: Daily[], activities: Workout[], goals: Goal
   for (const d of [...daily].sort((a,b)=>a.date.localeCompare(b.date)).filter(d=>d.date < today)) logs.push(freezeRecommendation(daily,activities,goals,sets,d.date,userId,'replay',undefined,logs));
   return logs;
 }
-export function filterEvaluationVersions(logs: RecommendationLog[], version: 'all' | 'v1' | 'v2') {
+export function filterEvaluationVersions(logs: RecommendationLog[], version: 'all' | 'v1' | 'v2' | 'v3') {
   return logs.filter(r => version === 'all' || r.rules_version === version);
 }

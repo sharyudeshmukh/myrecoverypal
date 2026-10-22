@@ -78,14 +78,16 @@ describe('isolated synthetic evaluation',()=>{
   });
 });
 describe('rules version isolation',()=>{
-  it('new frozen advice is v2 and version filtering does not modify old snapshots',()=>{
+  it('new frozen advice is v3 and filtering preserves frozen v1 and v2 snapshots',()=>{
     const old = {...rec(), rules_version:'v1' as const};
-    const before = JSON.stringify(old);
+    const v2 = {...rec(), rules_version:'v2' as const};
+    const before = JSON.stringify([old,v2]);
     const current = rec();
-    expect(current.rules_version).toBe('v2');
-    expect(filterEvaluationVersions([old,current],'v1')).toEqual([old]);
-    expect(filterEvaluationVersions([old,current],'v2')).toEqual([current]);
-    expect(filterEvaluationVersions([old,current],'all')).toHaveLength(2);
-    expect(JSON.stringify(old)).toBe(before);
+    expect(current.rules_version).toBe('v3');
+    expect(filterEvaluationVersions([old,v2,current],'v1')).toEqual([old]);
+    expect(filterEvaluationVersions([old,v2,current],'v2')).toEqual([v2]);
+    expect(filterEvaluationVersions([old,v2,current],'v3')).toEqual([current]);
+    expect(filterEvaluationVersions([old,v2,current],'all')).toHaveLength(3);
+    expect(JSON.stringify([old,v2])).toBe(before);
   });
 });

@@ -60,10 +60,10 @@ describe('nextWorkout rules', () => {
     const acts = [0, 1, 2, 3].map((i) => workout({ activity_id: i, date: `2026-10-${18 - i}`, type: 'running' }));
     expect(nextWorkout([], acts, goals, [], TODAY).type).toBe('recovery');
   });
-  it('fresh muscles permit strength after a light strength session yesterday', () => {
+  it('unknown full-body strength yesterday blocks both regions', () => {
     const acts = [workout({ activity_id: 1, date: '2026-10-17', type: 'strength_training' })];
     const next = nextWorkout([], acts, goals, [], TODAY);
-    expect(next.type).toBe('strength');
+    expect(next.type).toBe('cardio');
   });
   it('recommends upper-body strength the day after a lower-body session', () => {
     const yesterday = workout({
@@ -89,7 +89,7 @@ describe('nextWorkout rules', () => {
   });
   it('strength due outranks a cardio deficit with optional finisher', () => {
     const d = daily({ date: TODAY, raw: { stats: { bodyBatteryMostRecentValue: 60 } } });
-    const acts = [workout({ activity_id: 1, date: '2026-10-14', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-15', type: 'strength_training' }), workout({ activity_id: 3, date: '2026-10-16', type: 'strength_training' })];
+    const acts = [workout({ activity_id: 1, date: '2026-10-13', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-14', type: 'strength_training' }), workout({ activity_id: 3, date: '2026-10-15', type: 'strength_training' })];
     const rec = nextWorkout([d], acts, goals, [], TODAY);
     expect(rec.type).toBe('strength');
     expect(rec.ruleId).toBe('strength_due');
@@ -105,7 +105,7 @@ describe('muscle suggestions and overload', () => {
     const acts = [workout({ activity_id: 1, date: TODAY, type: 'running', duration_seconds: 9000 })];
     const next = nextWorkout([], acts, goals, [], TODAY);
     expect(next.type).toBe('strength');
-    expect(next.muscleGroups).toEqual(['chest', 'back', 'shoulders']);
+    expect(next.muscleGroups).toEqual(['chest', 'back', 'shoulders', 'arms']);
   });
   it('suggests least recently trained muscle groups', () => {
     const acts = [workout({ activity_id: 1, date: '2026-10-10', type: 'strength_training' }), workout({ activity_id: 2, date: '2026-10-12', type: 'strength_training' })];
@@ -183,15 +183,15 @@ describe('cardio counting and Pacific day', () => {
 
 const V2_DATE = '2026-10-21';
 function heavy(date: string, raw: Workout['raw'] = null) { return workout({activity_id: 500,date,type:'strength_training',duration_seconds:36000,raw}); }
-describe('v2 exact priorities and limits', () => {
-  it('strength due wins even with no fresh muscles', () => {
+describe('v3 regional priorities and retained cardio limits', () => {
+  it('strength due cannot override unready regions', () => {
     const rec = nextWorkout([], [heavy('2026-10-19')], goals, [], V2_DATE);
-    expect(rec.type).toBe('strength'); expect(rec.ruleId).toBe('strength_due');
+    expect(rec.type).toBe('cardio'); expect(rec.ruleId).toBe('cardio_far_behind_pace');
   });
-  it('a single fresh group is enough and is selected first', () => {
+  it('a single fresh group is not enough for a region', () => {
     const named = ['BENCH_PRESS','ROW','SHOULDER_PRESS','CURL','PLANK','SQUAT','DEADLIFT'].map(category => ({category,sets:100,reps:100}));
     const rec = nextWorkout([], [heavy('2026-10-20',{summarizedExerciseSets:named})], goals, [], V2_DATE);
-    expect(rec.type).toBe('strength'); expect(rec.muscleGroups?.[0]).toBe('calves');
+    expect(rec.type).toBe('cardio'); expect(rec.muscleGroups).toBeUndefined();
   });
   it('cardio after yesterday strength requires no fresh group', () => {
     const rec = nextWorkout([], [heavy('2026-10-20')], goals, [], V2_DATE);
@@ -211,7 +211,7 @@ describe('v2 exact priorities and limits', () => {
   it('two consecutive frozen cardio leads cap the third but not recovery', () => {
     const history = [{for_date:'2026-10-19',rec_type:'cardio' as const},{for_date:'2026-10-20',rec_type:'cardio' as const}];
     expect(cardioLeadStreak(history,V2_DATE)).toBe(2);
-    expect(nextWorkout([], [heavy('2026-10-20')],goals,[],V2_DATE,undefined,history).ruleId).toBe('cardio_lead_cap_strength');
+    expect(nextWorkout([], [heavy('2026-10-20')],goals,[],V2_DATE,undefined,history).ruleId).toBe('cardio_lead_cap_recovery');
     const d = daily({date:V2_DATE,raw:{stats:{bodyBatteryMostRecentValue:24}}});
     expect(nextWorkout([d],[],goals,[],V2_DATE,undefined,history).ruleId).toBe('low_bb_recovery');
   });
@@ -229,5 +229,27 @@ describe('v2 exact priorities and limits', () => {
   it('Seattle timestamps use DST and standard time correctly', () => {
     expect(pacificTimestamp('2026-10-21T08:00:00')).toBe(Date.parse('2026-10-21T15:00:00Z'));
     expect(pacificTimestamp('2026-12-21T08:00:00')).toBe(Date.parse('2026-12-21T16:00:00Z'));
+  });
+});
+
+describe('v3 no same-region strength within 48h', () => {
+  const date = '2026-10-22';
+  const upper = workout({ activity_id: 901, date: '2026-10-21', type: 'strength_training', name: 'Upper body', duration_seconds: 32 * 60, raw: { summarizedExerciseSets: [{ category: 'ROW', sets: 1, reps: 7 }] } });
+  it('upper yesterday chooses fresh lower, never upper', () => {
+    const rec = nextWorkout([], [upper], goals, [], date);
+    expect(rec.type).toBe('strength'); expect(rec.title).toBe('Strength: lower body');
+    expect(rec.muscleGroups).toEqual(['quads', 'hamstrings', 'glutes', 'calves']);
+  });
+  it('lower yesterday chooses fresh upper, never lower', () => {
+    const rec = nextWorkout([], [{ ...upper, name: 'Lower body', raw: { summarizedExerciseSets: [{ category: 'SQUAT', sets: 3, reps: 8 }] } }], goals, [], date);
+    expect(rec.type).toBe('strength'); expect(rec.title).toBe('Strength: upper body');
+  });
+  it('48-hour guard applies to elapsed hours, not two calendar dates', () => {
+    const rec = nextWorkout([], [{ ...upper, start_time_local: '2026-10-20T20:00:00' }], goals, [], date, pacificTimestamp('2026-10-22T11:00:00'));
+    expect(rec.title).toBe('Strength: lower body');
+  });
+  it('recent leg cardio can leave neither region fresh after upper strength', () => {
+    const cardio = workout({activity_id:902,date:'2026-10-21',type:'running',duration_seconds:28*60});
+    expect(nextWorkout([], [upper,cardio], goals, [], date).type).toBe('cardio');
   });
 });

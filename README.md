@@ -26,7 +26,7 @@ The obvious fix was to pull the data into my own app. Then I hit the real proble
 | | |
 |---|---|
 | 🎯 **Next-workout engine** | Recommends tomorrow's session (strength, Zone 2 cardio or recovery), with the duration, heart-rate range and the reasons behind it, based on training history, Body Battery, stress, sleep and weekly targets. |
-| 💪 **Automatic muscle recovery map** | Estimates fatigue for 9 muscle groups from Garmin's exercise data, with no manual logging. Fatigue decays over 36–48h and adjusts to Body Battery. |
+| 💪 **Automatic muscle recovery map** | Estimates fatigue for 9 muscle groups from Garmin's exercise data, with no manual logging. Calibrated exponential decay adjusts to Body Battery; recently trained groups cannot be labeled fresh within 48h. |
 | 📊 **Workout deep-dives** | Every session gets time in each heart-rate zone, splits, a comparison with the previous session of the same type, and a "what this did for your goal" note. |
 | 🔋 **Daily vitals** | Calories, steps, heart rate, Body Battery and stress, each with a 7-day trend. |
 | 📈 **Goal tracking** | Weight trend toward target, weekly strength and cardio targets, a streak counter, and a plain-English insights feed comparing this week with last week. |
@@ -75,7 +75,7 @@ Wearable data is full of traps, and each one is handled explicitly:
 - The complete raw Garmin payload is stored in a `jsonb` column, so new metrics can be added later without re-syncing.
 
 **4. The fatigue model.**
-Each Garmin exercise category (e.g. `SQUAT`, `BENCH_PRESS`, `PUSH_UP`) maps to primary (100%) and secondary (50%) muscle groups. Load is sets × reps, and cardio adds leg load weighted by time in heart-rate zones 3–5. Fatigue decays exponentially, faster for small muscle groups, and slows by 25% when Body Battery is under 40.
+Each Garmin exercise category (e.g. `SQUAT`, `BENCH_PRESS`, `PUSH_UP`) maps to primary (100%) and secondary (50%) muscle groups. Strength uses duration and set-based regional workload floors so sparse Garmin summaries do not erase the session. Upper-body titles or exercises load all upper groups; unlisted groups get explicitly estimated loads. Cardio adds load weighted by time in heart-rate zones 3–5. Fatigue decays exponentially and slows by 25% when Body Battery is under 40. The v3 calibration below is a heuristic, not measured muscle repair.
 
 **5. Recommendations people can trust.**
 The next-workout engine is **rule-based, not a black box**. Every recommendation shows the exact numbers that drove it, such as "Strength was yesterday · Body Battery 58 · 7 cardio minutes this week vs a 150-minute target", plus a lower-energy alternative.
@@ -84,7 +84,9 @@ The next-workout engine is **rule-based, not a black box**. Every recommendation
 
 v2 (2026-10-21): strength-first priority; cardio as weekly budget with pace check; max 2 cardio-lead days in a row.
 
-Existing frozen recommendations remain v1; only new captures use v2. Evaluation can filter versions and displays a version split; replay remains separately labeled. Weekly cardio uses all cardio workout durations in the rolling last 7 Pacific calendar days. Pace is target × elapsed Monday–Sunday days / 7; far behind is below half that pace. Strength leads when due or a muscle is fresh, with optional Zone 2 after lifting. No eligible primary session means mobility rather than unconditional cardio.
+v3 (2026-10-22): no same-region strength within 48h; recalibrated fatigue so a session yesterday isn't 'fresh'; upper-body sessions load all upper groups.
+
+Existing frozen v1/v2 recommendations remain unchanged; only new captures use v3. Evaluation can filter versions and displays a version split; replay remains separately labeled. Weekly cardio uses all cardio workout durations in the rolling last 7 Pacific calendar days. Pace is target × elapsed Monday–Sunday days / 7; far behind is below half that pace. Strength leads only for a genuinely fresh upper/lower region, selected by average recovery excluding core. Fresh means ≥85% recovered and no work within 48h; a strength region trained within 48h cannot repeat. Behind-pace cardio is an optional finisher. A typical 35-minute strength session estimates about 52% recovery after 24h and 81% after 48h at standard Body Battery; these are workload estimates, not measured repair. No eligible primary session means mobility rather than unconditional cardio.
 
 ## Metric definitions
 

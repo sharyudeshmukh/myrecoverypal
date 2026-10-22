@@ -35,11 +35,12 @@ export const EXERCISE_MUSCLES: Record<string, Mapping> = {
   LATERAL_RAISE: { primary: ['shoulders'], secondary: [] },
   FRONT_RAISE: { primary: ['shoulders'], secondary: [] },
 };
-const large = new Set<RecoveryMuscle>(['quads', 'hamstrings', 'glutes', 'back', 'chest']);
+export const RECOVERY_REGIONS = { upper: ['chest', 'back', 'shoulders', 'arms'], lower: ['quads', 'hamstrings', 'glutes', 'calves'] } as const;
 export function decayRate(battery: number | null) { return battery !== null && battery < 40 ? 0.75 : battery !== null && battery >= 70 ? 1.1 : 1; }
 export function remainingFatigue(load: number, hours: number, muscle: RecoveryMuscle, battery: number | null) {
-  // 90% of a single session's fatigue dissipates by the recovery horizon.
-  return load * Math.exp(-Math.log(10) * Math.max(0, hours) * decayRate(battery) / (large.has(muscle) ? 48 : 36));
+  // Typical load 120: 52% recovered at 24h, 81% at 48h (standard battery).
+  // Use the same calibrated horizon for every worked strength group.
+  return load * Math.exp(-Math.log(2.5) * Math.max(0, hours) * decayRate(battery) / 24);
 }
 function record(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -53,6 +54,22 @@ export function todayRecoveryBattery(daily: Daily[], today: string): number | nu
 }
 export type RecoveryCause = { activityId: number; name: string; date: string; load: number; remaining: number; evidence: 'named' | 'estimated' | 'cardio' };
 export type MuscleRecovery = { muscle: RecoveryMuscle; recovered: number; fatigue: number; status: 'Fresh' | 'Recovering' | 'Fatigued'; lastWorked: string | null; daysAgo: number | null; causes: RecoveryCause[]; estimated: boolean };
+/** Title is split evidence, not evidence of individual named exercises. */
+export function strengthRegions(activity: Workout): ('upper' | 'lower')[] {
+  if (workoutType(activity.type) !== 'strength_training') return [];
+  const name = (activity.name ?? '').toLowerCase();
+  if (/full[ -]?body/.test(name)) return ['upper', 'lower'];
+  const upperTitle = /upper[ -]?body|upper|push|pull|chest|back|shoulder|arms/.test(name);
+  const lowerTitle = /lower[ -]?body|lower|legs/.test(name);
+  if (upperTitle || lowerTitle) return [...(upperTitle ? ['upper' as const] : []), ...(lowerTitle ? ['lower' as const] : [])];
+  const raw = record(activity.raw);
+  const sets = Array.isArray(raw['summarizedExerciseSets']) ? raw['summarizedExerciseSets'].map(record) : [];
+  const primary = sets.flatMap(set => EXERCISE_MUSCLES[String(set['category']).toUpperCase().replace(/[ -]/g, '_')]?.primary ?? []);
+  const lower = primary.some(m => RECOVERY_REGIONS.lower.some(x => x === m));
+  // Deadlift back involvement is not an upper-body split in a lower session.
+  const upper = sets.some(set => String(set['category']).toUpperCase() !== 'DEADLIFT' && (EXERCISE_MUSCLES[String(set['category']).toUpperCase().replace(/[ -]/g, '_')]?.primary ?? []).some(m => RECOVERY_REGIONS.upper.some(x => x === m)));
+  return upper || lower ? [...(upper ? ['upper' as const] : []), ...(lower ? ['lower' as const] : [])] : ['upper', 'lower'];
+}
 export function sessionMuscleLoads(activity: Workout): { muscle: RecoveryMuscle; load: number; evidence: RecoveryCause['evidence'] }[] {
   const type = workoutType(activity.type), raw = record(activity.raw);
   const minutes = (positive(activity.duration_seconds) ?? 0) / 60;
@@ -78,10 +95,17 @@ export function sessionMuscleLoads(activity: Workout): { muscle: RecoveryMuscle;
       mapping.primary.forEach(m => add(m, work / 30 * 55, 'named'));
       mapping.secondary.forEach(m => add(m, work / 30 * 55 * 0.5, 'named'));
     }
-    if (!sets.length || unknown > 0) {
-      const fraction = sets.length ? unknown / sets.length : 1;
-      // Equal full-body distribution; 45 minutes at 100 bpm gives 45 fatigue/group.
-      RECOVERY_MUSCLES.forEach(m => add(m, minutes * hrFactor * fraction, 'estimated'));
+    const regions = strengthRegions(activity);
+    const totalSets = sets.reduce((sum, set) => sum + (positive(set['sets']) ?? positive(set['setCount']) ?? positive(set['numSets']) ?? 1), 0);
+    const durationScale = minutes / 35;
+    // Sparse Garmin summaries cannot erase a 32-minute session. Sets can raise,
+    // never shrink, its duration-based stimulus. Unknown work stays regional.
+    const baseline = 120 * Math.max(durationScale, totalSets / 12) * Math.min(1.1, Math.max(.9, hrFactor));
+    const affected: RecoveryMuscle[] = regions.flatMap(region => [...RECOVERY_REGIONS[region]]);
+    if (regions.length === 2 && (!sets.length || unknown === sets.length)) affected.push('core');
+    for (const muscle of affected) {
+      const prior = loads.get(muscle);
+      loads.set(muscle, { load: Math.max(prior?.load ?? 0, baseline), evidence: prior?.evidence ?? 'estimated' });
     }
   } else if (['running', 'treadmill_running', 'indoor_cardio'].includes(type)) {
     const hardMinutes = [3, 4, 5].reduce((sum, z) => sum + (positive(raw[`hrTimeInZone_${z}`]) ?? 0) / 60, 0);
@@ -118,10 +142,10 @@ export function computeGarminRecovery(activities: Workout[], daily: Daily[], now
     card.lastWorked = card.causes[0]?.date ?? null;
     card.daysAgo = card.lastWorked ? (now - pacificTimestamp(card.lastWorked)) / 864e5 : null;
     card.recovered = Math.round(100 - Math.min(100, card.fatigue));
-    card.status = card.recovered >= 85 ? 'Fresh' : card.recovered >= 50 ? 'Recovering' : 'Fatigued';
+    card.status = card.recovered >= 85 && (card.daysAgo === null || card.daysAgo >= 2) ? 'Fresh' : card.recovered >= 50 ? 'Recovering' : 'Fatigued';
   }
   const freshest = [...cards].sort((a, b) => a.fatigue - b.fatigue).slice(0, 3).map(c => c.muscle);
-  const upper = cards.filter(c => ['chest', 'back', 'shoulders', 'arms', 'core'].includes(c.muscle));
+  const upper = cards.filter(c => RECOVERY_REGIONS.upper.some(m => m === c.muscle));
   const legs = cards.filter(c => ['quads', 'hamstrings', 'glutes', 'calves'].includes(c.muscle));
   const groupState = (list: MuscleRecovery[]) => list.every(c => c.status === 'Fresh') ? 'fresh' : list.some(c => c.status === 'Fatigued') ? 'fatigued' : 'recovering';
   const hasData = cards.some(c => c.causes.length > 0);
